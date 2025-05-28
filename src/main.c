@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "header.h"
 
 void mainMenu(struct User u)
@@ -14,6 +17,7 @@ void mainMenu(struct User u)
     printf("\n\t\t[6]- Remove existing account\n");
     printf("\n\t\t[7]- Transfer ownership\n");
     printf("\n\t\t[8]- Exit\n");
+    printf("\n\t\tYour choice: ");
     scanf("%d", &option);
 
     switch (option)
@@ -22,35 +26,30 @@ void mainMenu(struct User u)
         createNewAcc(u);
         break;
     case 2:
-        // student TODO : add your **Update account information** function
-        // here
+        updateAccountInfo(u);
         break;
     case 3:
-        // student TODO : add your **Check the details of existing accounts** function
-        // here
+        checkAccountDetails(u);
         break;
     case 4:
         checkAllAccounts(u);
         break;
     case 5:
-        // student TODO : add your **Make transaction** function
-        // here
+        makeTransaction(u);
         break;
     case 6:
-        // student TODO : add your **Remove existing account** function
-        // here
+        removeAccount(u);
         break;
     case 7:
-        // student TODO : add your **Transfer owner** function
-        // here
+        transferOwnership(u);
         break;
     case 8:
-        exit(1);
+        exit(0);
         break;
     default:
         printf("Invalid operation!\n");
     }
-};
+}
 
 void initMenu(struct User *u)
 {
@@ -59,9 +58,11 @@ void initMenu(struct User *u)
     system("clear");
     printf("\n\n\t\t======= ATM =======\n");
     printf("\n\t\t-->> Feel free to login / register :\n");
-    printf("\n\t\t[1]- login\n");
-    printf("\n\t\t[2]- register\n");
-    printf("\n\t\t[3]- exit\n");
+    printf("\n\t\t[1]- Login\n");
+    printf("\n\t\t[2]- Register\n");
+    printf("\n\t\t[3]- Exit\n");
+    printf("\n\t\tYour choice: ");
+
     while (!r)
     {
         scanf("%d", &option);
@@ -71,11 +72,11 @@ void initMenu(struct User *u)
             loginMenu(u->name, u->password);
             if (strcmp(u->password, getPassword(*u)) == 0)
             {
-                printf("\n\nPassword Match!");
+                printf("\n\nPassword Match!\n");
             }
             else
             {
-                printf("\nWrong password!! or User Name\n");
+                printf("\nWrong password or user name!\n");
                 exit(1);
             }
             r = 1;
@@ -85,13 +86,13 @@ void initMenu(struct User *u)
             r = 1;
             break;
         case 3:
-            exit(1);
+            exit(0);
             break;
         default:
             printf("Insert a valid operation!\n");
         }
     }
-};
+}
 
 int main()
 {
