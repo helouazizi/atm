@@ -4,7 +4,7 @@ CREATE TABLE users (
     password TEXT NOT NULL
 );
 
-CREATE TABLE accounts (
+CREATE TABLE records (
     id INTEGER PRIMARY KEY AUTOINCREMENT,   -- internal unique id for accounts
     accountNbr INTEGER UNIQUE NOT NULL,     -- account number chosen by user
     ownerUsername TEXT NOT NULL,

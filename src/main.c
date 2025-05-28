@@ -108,11 +108,11 @@
 // }
 
 int main() {
-    sqlite3 *db = openDatabase("mydatabase.db");
+    sqlite3 *db = openDatabase("./data/db.db");
     if (!db) {
         return 1; // error opening DB
     }
-    
+
     if (!createTables(db)) {
         printf("Failed to create tables.\n");
         sqlite3_close(db);
