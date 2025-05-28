@@ -1,4 +1,7 @@
 #include "header.h"
+#include <stdio.h>      // FILE, fopen, fclose, fprintf, fscanf, printf, scanf
+#include <stdlib.h>     // exit, system, malloc, free (if used)
+#include <string.h>     // strcmp, strcpy
 
 const char *RECORDS = "./data/records.txt";
 

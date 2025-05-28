@@ -1,16 +1,29 @@
-objects = src/main.o src/system.o src/auth.o
+CC = cc
+CFLAGS = -Wall -Wextra -I./src
 
-atm : $(objects)
-	cc -o atm $(objects)
+SRC_DIR = src
+OBJ_DIR = obj
 
-main.o : src/header.h
-kbd.o : src/header.h
-command.o : src/header.h
-display.o : src/header.h
-insert.o : src/header.h
-search.o : src/header.h
-files.o : src/header.h
-utils.o : src/header.h
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/system.c $(SRC_DIR)/auth.c
+OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
-clean :
-	rm -f $(objects)
+# Default target
+all: atm
+
+# Link the final executable
+atm: $(OBJECTS)
+	$(CC) -o $@ $^
+
+# Compile .c to .o in obj/
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(SRC_DIR)/header.h
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean build artifacts
+clean:
+	rm -rf $(OBJ_DIR) atm
+
+# Run the program (make run)
+run: atm
+	./atm
+
