@@ -198,7 +198,7 @@ void updateAccountInfo(struct User u) {
 
     stayOrReturn(found, updateAccountInfo, u);
 }
-void checkAccount(struct User u) {
+void checkAccountDetails(struct User u) {
     FILE *fp = fopen(RECORDS, "r");
     struct Record r;
     char userName[50];
@@ -216,7 +216,7 @@ void checkAccount(struct User u) {
         }
     }
     fclose(fp);
-    stayOrReturn(found, checkAccount, u);
+    stayOrReturn(found, checkAccountDetails, u);
 }
 void makeTransaction(struct User u) {
     FILE *fp = fopen(RECORDS, "r");
@@ -300,9 +300,11 @@ void transferOwnership(struct User u) {
     while (getAccountFromFile(fp, userName, &r)) {
         if (strcmp(userName, u.name) == 0 && r.accountNbr == accNbr) {
             found = 1;
-            strcpy(userName, newOwner);
+            strcpy(userName, newOwner);  // update username to new owner
         }
-        saveAccountToFile(temp, (struct User){.name = userName}, r);
+        struct User tempUser = {0};     // create a temporary User struct
+        strcpy(tempUser.name, userName); // copy username into struct
+        saveAccountToFile(temp, tempUser, r);
     }
 
     fclose(fp);
