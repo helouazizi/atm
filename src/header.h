@@ -1,8 +1,8 @@
 #ifndef HEADER_H
 #define HEADER_H
-#include <stdio.h>      // FILE, fopen, fclose, fprintf, fscanf, printf, scanf
-#include <stdlib.h>     // exit, system, malloc, free (if used)
-#include <string.h>     // strcmp, strcpy
+
+#include <stdio.h>
+#include<sqlite3.h> 
 
 // Structs
 struct Date {
@@ -24,29 +24,31 @@ struct Record {
 
 struct User {
     int id;
-    char name[50];
+    char username[50];
     char password[50];
 };
 
-// Authentication
-void loginMenu(char a[50], char pass[50]);
-void registerMenu(char a[50], char pass[50]);
-const char *getPassword(struct User u);
 
-// System functions
-void mainMenu(struct User u);
-void createNewAcc(struct User u);
-void checkAllAccounts(struct User u);
-void checkAccountDetails(struct User u);
-void updateAccountInfo(struct User u);
-void makeTransaction(struct User u);
-void removeAccount(struct User u);
-void transferOwnership(struct User u);
+sqlite3 *openDatabase(const char *filename);
+int createTables(sqlite3 *db);
 
-// Helpers
-int getAccountFromFile(FILE *ptr, char name[50], struct Record *r);
-void saveAccountToFile(FILE *ptr, struct User u, struct Record r);
-void stayOrReturn(int notGood, void f(struct User u), struct User u);
-void success(struct User u);
+// // Authentication functions
+// int registerUser(sqlite3 *db, struct User *user);
+// int authenticateUser(sqlite3 *db, struct User *user);
+
+// // System functions that operate on DB and user
+// void mainMenu(sqlite3 *db, struct User *user);
+
+// int createNewAccount(sqlite3 *db, struct User *user);
+// void listAccounts(sqlite3 *db, struct User *user);
+// void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr);
+// int updateAccountInfo(sqlite3 *db, struct User *user, int accountNbr, double newBalance);
+// int makeTransaction(sqlite3 *db, struct User *user, int accountNbr, double amount);
+// int removeAccount(sqlite3 *db, struct User *user, int accountNbr);
+// int transferOwnership(sqlite3 *db, struct User *user, int accountNbr, const char *newOwnerUsername);
+
+// Helpers (if still relevant, or adapt to DB if needed)
+// void stayOrReturn(int notGood, void (*f)(sqlite3 *, struct User *), sqlite3 *db, struct User *user);
+// void success(struct User *user);
 
 #endif
