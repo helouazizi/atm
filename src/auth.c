@@ -2,8 +2,8 @@
 #include "header.h"
 
 
-// void loginMenu(char a[50], char pass[50])
-// {
+void loginMenu(char a[50], char pass[50])
+ {
 //     struct termios oflags, nflags;
 
 //     system("clear");
@@ -30,7 +30,7 @@
 //         perror("tcsetattr");
 //         return exit(1);
 //     }
-// };
+}; 
 
 // const char *getPassword(struct User u)
 // {
