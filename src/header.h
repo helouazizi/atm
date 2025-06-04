@@ -29,10 +29,13 @@ struct User {
 };
 
 
+// ========================== database functions ================================//
+
 sqlite3 *openDatabase(const char *filename);
 int createTables(sqlite3 *db);
 
-// // Authentication functions
+//=========================== Authentication functions ==========================//
+void loginMenu(char a[50], char pass[50]);
 // int registerUser(sqlite3 *db, struct User *user);
 // int authenticateUser(sqlite3 *db, struct User *user);
 
