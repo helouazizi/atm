@@ -16,8 +16,9 @@ sqlite3 *openDatabase(const char *filename)
     return db;
 }
 
-int createTables(sqlite3 *db) {
-    const char *Users = 
+int createTables(sqlite3 *db)
+{
+    const char *Users =
         "CREATE TABLE IF NOT EXISTS users ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "username TEXT UNIQUE NOT NULL, "
@@ -37,7 +38,8 @@ int createTables(sqlite3 *db) {
 
     // Execute create users table
     int rc = sqlite3_exec(db, Users, NULL, NULL, &errMsg);
-    if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK)
+    {
         fprintf(stderr, "SQL error creating users table: %s\n", errMsg);
         sqlite3_free(errMsg);
         return 0;
@@ -45,7 +47,8 @@ int createTables(sqlite3 *db) {
 
     // Execute create accounts table
     rc = sqlite3_exec(db, Records, NULL, NULL, &errMsg);
-    if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK)
+    {
         fprintf(stderr, "SQL error creating accounts table: %s\n", errMsg);
         sqlite3_free(errMsg);
         return 0;
@@ -55,22 +58,22 @@ int createTables(sqlite3 *db) {
 }
 
 // // Check if username exists (for registration uniqueness)
-// int usernameExists(sqlite3 *db, const char *username)
-// {
-//     const char *sql = "SELECT 1 FROM users WHERE username = ?;";
-//     sqlite3_stmt *stmt;
-//     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-//     if (rc != SQLITE_OK)
-//     {
-//         fprintf(stderr, "Failed to prepare username exists statement\n");
-//         return 1; // assume exists to prevent duplicates on error
-//     }
-//     sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
-//     rc = sqlite3_step(stmt);
-//     sqlite3_finalize(stmt);
+int usernameExists(sqlite3 *db, const char *username)
+{
+        const char *sql = "SELECT 1 FROM users WHERE username = ?;";
+        sqlite3_stmt *stmt;
+        int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+        if (rc != SQLITE_OK)
+        {
+            // fprintf(stderr, "Failed to prepare username exists statement\n");/
+            return 1; // assume exists to prevent duplicates on error
+        }
+        sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
+        rc = sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
 
-//     return (rc == SQLITE_ROW);
-// }
+        return (rc == SQLITE_ROW);
+}
 
 // // Register a new user - prevent duplicates
 // int registerUser(sqlite3 *db, struct User *user)
@@ -539,4 +542,3 @@ int createTables(sqlite3 *db) {
 //         }
 //     }
 // }
-
