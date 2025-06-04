@@ -1,9 +1,8 @@
 #include <termios.h>
 #include "header.h"
 
-
 void loginMenu(char a[50], char pass[50])
- {
+{
     struct termios oflags, nflags;
 
     system("clear");
@@ -30,39 +29,25 @@ void loginMenu(char a[50], char pass[50])
         perror("tcsetattr");
         return exit(1);
     }
-}; 
+};
 
+void registerMenu(sqlite3 *db,char name[50], char password[50])
+{
+    struct User temp;
+    int exists = 0;
 
+    printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User Register:");
 
-// void registerMenu(char name[50], char password[50]) {
-//     FILE *fp;
-//     struct User temp;
-//     int exists = 0;
+    printf("\n\n\n\n\n\t\t\t\tEnter a username: ");
 
-//     printf("\n\nRegister a new user.\n");
-//     printf("Enter a username: ");
-//     scanf("%s", name);
+    scanf("%s", name);
 
-//     fp = fopen(USERS, "a+");
-//     if (fp == NULL) {
-//         printf("Unable to open user file.\n");
-//         exit(1);
-//     }
+    // check username  existance
 
-//     // Check if user already exists
-//     while (fscanf(fp, "%s %s", temp.name, temp.password) != EOF) {
-//         if (strcmp(temp.name, name) == 0) {
-//             printf("User already exists!\n");
-//             fclose(fp);
-//             exit(1);
-//         }
-//     }
+    printf("\n\n\n\n\n\t\t\t\tEnter a password: ");
+    scanf("%s", password);
 
-//     printf("Enter a password: ");
-//     scanf("%s", password);
+    // save to db
 
-//     fprintf(fp, "%s %s\n", name, password);
-//     fclose(fp);
-
-//     printf("\n✔ User registered successfully!\n");
-// }
+    printf("\n✔ User registered successfully!\n");
+}
