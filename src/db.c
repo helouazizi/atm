@@ -27,11 +27,17 @@ int createTables(sqlite3 *db)
 
     const char *Records =
         "CREATE TABLE IF NOT EXISTS records ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "accountNbr INTEGER UNIQUE NOT NULL, "
-        "ownerUsername TEXT NOT NULL, "
-        "balance REAL DEFAULT 0, "
-        "FOREIGN KEY(ownerUsername) REFERENCES users(username)"
+        "id INTEGER PRIMARY KEY, "
+        "user_id INTEGER NOT NULL, "
+        "name TEXT, "
+        "country TEXT, "
+        "phone INTEGER, "
+        "accountType TEXT, "
+        "accountNbr INTEGER, "
+        "amount REAL, "
+        "deposit TEXT, "
+        "withdraw TEXT, "
+        "FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE"
         ");";
 
     char *errMsg = NULL;
@@ -56,129 +62,6 @@ int createTables(sqlite3 *db)
 
     return 1; // Success
 }
-
-// // Check if username exists (for registration uniqueness)
-int usernameExists(sqlite3 *db, const char *username)
-{
-    const char *sql = "SELECT 1 FROM users WHERE username = ?;";
-    sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK)
-    {
-        // fprintf(stderr, "Failed to prepare username exists statement\n");/
-        return 1; // assume exists to prevent duplicates on error
-    }
-    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
-    rc = sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-
-    return (rc == SQLITE_ROW);
-}
-
-// Register a new user - prevent duplicates
-int registerUser(sqlite3 *db, struct User *user)
-{
-        if (usernameExists(db, user->username))
-        {
-            printf("Username '%s' already exists. Choose another.\n", user->username);
-            return 0;
-        }
-
-        const char *sql = "INSERT INTO users (username, password) VALUES (?, ?);";
-        sqlite3_stmt *stmt;
-        int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-        if (rc != SQLITE_OK)
-        {
-            // fprintf(stderr, "Failed to prepare insert user statement\n");
-            return 0;
-        }
-
-        sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_STATIC);
-
-        rc = sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
-
-        return (rc == SQLITE_DONE);
-}
-
-// // Update phone or country for user by username
-// int updateUserInfo(sqlite3 *db, const char *username, const char *field, const char *newValue)
-// {
-//     if (strcmp(field, "phone") != 0 && strcmp(field, "country") != 0)
-//     {
-//         printf("Can only update 'phone' or 'country' fields.\n");
-//         return 0;
-//     }
-
-//     char sql[128];
-//     snprintf(sql, sizeof(sql), "UPDATE users SET %s = ? WHERE username = ?;", field);
-
-//     sqlite3_stmt *stmt;
-//     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-//     if (rc != SQLITE_OK)
-//     {
-//         fprintf(stderr, "Failed to prepare update user info statement\n");
-//         return 0;
-//     }
-
-//     sqlite3_bind_text(stmt, 1, newValue, -1, SQLITE_STATIC);
-//     sqlite3_bind_text(stmt, 2, username, -1, SQLITE_STATIC);
-
-//     rc = sqlite3_step(stmt);
-//     sqlite3_finalize(stmt);
-
-//     return (rc == SQLITE_DONE);
-// }
-
-// Authenticate user
-int authenticateUser(sqlite3 *db, struct User *user)
-{
-    const char *sql = "SELECT password FROM users WHERE username = ?;";
-    sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK)
-    {
-        // fprintf(stderr, "Failed to prepare auth statement\n");
-        return 0;
-    }
-
-    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-    rc = sqlite3_step(stmt);
-
-    if (rc == SQLITE_ROW)
-    {
-        const unsigned char *db_password = sqlite3_column_text(stmt, 0);
-        int result = (strcmp((const char *)db_password, user->password) == 0);
-        sqlite3_finalize(stmt);
-        return result;
-    }
-
-    sqlite3_finalize(stmt);
-    return 0;
-}
-
-// // Create new record for a user
-// int createNewAccount(sqlite3 *db, struct User *user, const char *accountType)
-// {
-//     // Default balance 0, and depositDate is current date (for simplicity, pass NULL or set externally)
-//     const char *sql = "INSERT INTO accounts (ownerUsername, balance, accountType, depositDate) VALUES (?, 0, ?, date('now'));";
-//     sqlite3_stmt *stmt;
-//     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-//     if (rc != SQLITE_OK)
-//     {
-//         fprintf(stderr, "Failed to prepare insert account statement\n");
-//         return 0;
-//     }
-
-//     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-//     sqlite3_bind_text(stmt, 2, accountType, -1, SQLITE_STATIC);
-
-//     rc = sqlite3_step(stmt);
-//     sqlite3_finalize(stmt);
-
-//     return (rc == SQLITE_DONE);
-// }
 
 // // List all accounts of a user
 // void listAccounts(sqlite3 *db, struct User *user)

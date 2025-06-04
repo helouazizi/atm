@@ -36,9 +36,14 @@ int createTables(sqlite3 *db);
 
 //=========================== Authentication functions ==========================//
 void loginMenu(char a[50], char pass[50]);
+void registerMenu(sqlite3 *db,char name[50], char password[50]);
 int usernameExists(sqlite3 *db, const char *username);
 int authenticateUser(sqlite3 *db, struct User *user);
 int registerUser(sqlite3 *db, struct User *user);
+
+//=========================== system functions ==========================//
+int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue);
+
 
 // void mainMenu(sqlite3 *db, struct User *user);
 

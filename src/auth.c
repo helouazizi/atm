@@ -33,8 +33,6 @@ void loginMenu(char a[50], char pass[50])
 
 void registerMenu(sqlite3 *db,char name[50], char password[50])
 {
-    struct User temp;
-    int exists = 0;
 
     printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User Register:");
 
@@ -50,4 +48,74 @@ void registerMenu(sqlite3 *db,char name[50], char password[50])
     // save to db
 
     printf("\n✔ User registered successfully!\n");
+}
+// // Check if username exists (for registration uniqueness)
+int usernameExists(sqlite3 *db, const char *username)
+{
+    const char *sql = "SELECT 1 FROM users WHERE username = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        // fprintf(stderr, "Failed to prepare username exists statement\n");/
+        return 1; // assume exists to prevent duplicates on error
+    }
+    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    return (rc == SQLITE_ROW);
+}
+
+// Register a new user - prevent duplicates
+int registerUser(sqlite3 *db, struct User *user)
+{
+        if (usernameExists(db, user->username))
+        {
+            printf("Username '%s' already exists. Choose another.\n", user->username);
+            return 0;
+        }
+
+        const char *sql = "INSERT INTO users (username, password) VALUES (?, ?);";
+        sqlite3_stmt *stmt;
+        int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+        if (rc != SQLITE_OK)
+        {
+            // fprintf(stderr, "Failed to prepare insert user statement\n");
+            return 0;
+        }
+
+        sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_STATIC);
+
+        rc = sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+
+        return (rc == SQLITE_DONE);
+}
+// Authenticate user
+int authenticateUser(sqlite3 *db, struct User *user)
+{
+    const char *sql = "SELECT password FROM users WHERE username = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        // fprintf(stderr, "Failed to prepare auth statement\n");
+        return 0;
+    }
+
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+    rc = sqlite3_step(stmt);
+
+    if (rc == SQLITE_ROW)
+    {
+        const unsigned char *db_password = sqlite3_column_text(stmt, 0);
+        int result = (strcmp((const char *)db_password, user->password) == 0);
+        sqlite3_finalize(stmt);
+        return result;
+    }
+
+    sqlite3_finalize(stmt);
+    return 0;
 }
