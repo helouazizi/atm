@@ -17,14 +17,14 @@ sqlite3 *openDatabase(const char *filename)
 }
 
 int createTables(sqlite3 *db) {
-    const char *sqlUsers = 
+    const char *Users = 
         "CREATE TABLE IF NOT EXISTS users ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "username TEXT UNIQUE NOT NULL, "
         "password TEXT NOT NULL"
         ");";
 
-    const char *sqlAccounts =
+    const char *Records =
         "CREATE TABLE IF NOT EXISTS records ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "accountNbr INTEGER UNIQUE NOT NULL, "
@@ -36,7 +36,7 @@ int createTables(sqlite3 *db) {
     char *errMsg = NULL;
 
     // Execute create users table
-    int rc = sqlite3_exec(db, sqlUsers, NULL, NULL, &errMsg);
+    int rc = sqlite3_exec(db, Users, NULL, NULL, &errMsg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error creating users table: %s\n", errMsg);
         sqlite3_free(errMsg);
@@ -44,7 +44,7 @@ int createTables(sqlite3 *db) {
     }
 
     // Execute create accounts table
-    rc = sqlite3_exec(db, sqlAccounts, NULL, NULL, &errMsg);
+    rc = sqlite3_exec(db, Records, NULL, NULL, &errMsg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error creating accounts table: %s\n", errMsg);
         sqlite3_free(errMsg);
