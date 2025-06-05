@@ -54,58 +54,58 @@
 //     }
 // }
 
-// void initMenu(sqlite3 *db, struct User *u)
-// {
-//     int r = 0;
-//     int option;
-//     system("clear");
-//     printf("\n\n\t\t======= ATM =======\n");
-//     printf("\n\t\t-->> Feel free to login / register :\n");
-//     printf("\n\t\t[1]- Login\n");
-//     printf("\n\t\t[2]- Register\n");
-//     printf("\n\t\t[3]- Exit\n");
-//     printf("\n\t\tYour choice: ");
+void initMenu(sqlite3 *db, struct User *u)
+{
+    int r = 0;
+    int option;
+    system("clear");
+    printf("\n\n\t\t======= ATM =======\n");
+    printf("\n\t\t-->> Feel free to login / register :\n");
+    printf("\n\t\t[1]- Login\n");
+    printf("\n\t\t[2]- Register\n");
+    printf("\n\t\t[3]- Exit\n");
+    printf("\n\t\tYour choice: ");
 
-//     while (!r)
-//     {
-//         scanf("%d", &option);
-//         switch (option)
-//         {
-//         case 1:
-//             loginMenu(u->username, u->password);
-//             if (loadUserFromDB(db, u->username, u)) // You must pass db here
-//             {
-//                 if (strcmp(u->password, getPassword(*u)) == 0)
-//                 {
-//                     printf("\n\nPassword Match!\n");
-//                 }
-//                 else
-//                 {
-//                     printf("\nWrong password!\n");
-//                     exit(1);
-//                 }
-//             }
-//             else
-//             {
-//                 printf("\nUser not found!\n");
-//                 exit(1);
-//             }
-//             r = 1;
-//             break;
-//         case 2:
-//             registerMenu(u->username, u->password);
-//             saveUserToDB(db, u);  // Also pass db here
-//             r = 1;
-//             break;
-//         case 3:
-//             sqlite3_close(db); // Close DB before exit
-//             exit(0);
-//             break;
-//         default:
-//             printf("Insert a valid operation!\n");
-//         }
-//     }
-// }
+    while (!r)
+    {
+        scanf("%d", &option);
+        switch (option)
+        {
+        case 1:
+            loginMenu(u->username, u->password);
+            if (loadUserFromDB(db, u->username, u)) // You must pass db here
+            {
+                if (strcmp(u->password, getPassword(*u)) == 0)
+                {
+                    printf("\n\nPassword Match!\n");
+                }
+                else
+                {
+                    printf("\nWrong password!\n");
+                    exit(1);
+                }
+            }
+            else
+            {
+                printf("\nUser not found!\n");
+                exit(1);
+            }
+            r = 1;
+            break;
+        case 2:
+            // registerMenu(u->username, u->password);
+            // saveUserToDB(db, u);  // Also pass db here
+            r = 1;
+            break;
+        case 3:
+            sqlite3_close(db); // Close DB before exit
+            exit(0);
+            break;
+        default:
+            printf("Insert a valid operation!\n");
+        }
+    }
+}
 
 int main() {
     sqlite3 *db = openDatabase("./data/db.db");
@@ -120,6 +120,11 @@ int main() {
     }
 
     printf("Tables created successfully.\n");
+
+    struct User *user ;
+
+    initMenu(db,user);
+
 
     sqlite3_close(db);
     return 0;

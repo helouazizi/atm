@@ -37,7 +37,7 @@ int createTables(sqlite3 *db)
         "amount REAL, "
         "deposit TEXT, "
         "withdraw TEXT, "
-        "FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE"
+        "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
         ");";
 
     char *errMsg = NULL;
@@ -232,7 +232,6 @@ int createTables(sqlite3 *db)
 //     }
 // }
 
-// // Example usage inside a function that drives menu
 // void menu(sqlite3 *db, struct User *user)
 // {
 //     int choice;
