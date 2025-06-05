@@ -31,7 +31,7 @@ int createTables(sqlite3 *db)
         "user_id INTEGER NOT NULL, "
         "name TEXT, "
         "country TEXT, "
-        "phone INTEGER, "
+        "phone TEXT, "
         "accountType TEXT, "
         "accountNbr INTEGER, "
         "amount REAL, "
@@ -63,31 +63,7 @@ int createTables(sqlite3 *db)
     return 1; // Success
 }
 
-// // List all accounts of a user
-// void listAccounts(sqlite3 *db, struct User *user)
-// {
-//     const char *sql = "SELECT accountNbr, balance, accountType FROM accounts WHERE ownerUsername = ?;";
-//     sqlite3_stmt *stmt;
-//     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-//     if (rc != SQLITE_OK)
-//     {
-//         printf("Failed to prepare select accounts statement\n");
-//         return;
-//     }
 
-//     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-
-//     printf("Your accounts:\n");
-//     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
-//     {
-//         int accNbr = sqlite3_column_int(stmt, 0);
-//         double balance = sqlite3_column_double(stmt, 1);
-//         const unsigned char *accType = sqlite3_column_text(stmt, 2);
-//         printf("Account #%d [%s]: Balance = %.2f\n", accNbr, accType, balance);
-//     }
-
-//     sqlite3_finalize(stmt);
-// }
 
 // // Calculate and display interest for given account type and deposit date
 // void displayInterest(const char *accountType, double balance, const char *depositDate)

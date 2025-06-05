@@ -14,15 +14,15 @@ int createNewAccount(sqlite3 *db, struct User *user, struct Record *record)
     }
 
     // Bind parameters
-    sqlite3_bind_int(stmt, 1, user->id);                                // userId
-    sqlite3_bind_text(stmt, 2, record->name, -1, SQLITE_STATIC);        // name
-    sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC);     // country
-    sqlite3_bind_int(stmt, 4, record->phone);                           // phone
-    sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC); // accountType
-    sqlite3_bind_int(stmt, 6, record->accountNbr);                      // accountNbr
-    sqlite3_bind_double(stmt, 7, record->amount);                       // amount
-    sqlite3_bind_text(stmt, 8, record->deposit.year, -1, SQLITE_STATIC);     // deposit (as TEXT)
-    sqlite3_bind_text(stmt, 9, record->withdraw.year, -1, SQLITE_STATIC);    // withdraw (as TEXT)
+    sqlite3_bind_int(stmt, 1, user->id);                                  // userId
+    sqlite3_bind_text(stmt, 2, record->name, -1, SQLITE_STATIC);          // name
+    sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC);       // country
+    sqlite3_bind_int(stmt, 4, record->phone);                             // phone
+    sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC);   // accountType
+    sqlite3_bind_int(stmt, 6, record->accountNbr);                        // accountNbr
+    sqlite3_bind_double(stmt, 7, record->amount);                         // amount
+    sqlite3_bind_text(stmt, 8, record->deposit.year, -1, SQLITE_STATIC);  // deposit (as TEXT)
+    sqlite3_bind_text(stmt, 9, record->withdraw.year, -1, SQLITE_STATIC); // withdraw (as TEXT)
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -57,4 +57,37 @@ int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *ne
     sqlite3_finalize(stmt);
 
     return (rc == SQLITE_DONE);
+}
+
+// List all accounts of a user
+void listAccounts(sqlite3 *db, struct User *user)
+{
+    const char *sql = "SELECT * FROM records WHERE name = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        printf("Failed to prepare select accounts statement\n");
+        return;
+    }
+
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+
+    printf("Your accounts:\n");
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        int accId = sqlite3_column_int(stmt, 0);
+        const unsigned char *name = sqlite3_column_text(stmt, 2);
+        const unsigned char *country = sqlite3_column_text(stmt, 3);
+        const unsigned char *phone = sqlite3_column_text(stmt, 4);
+        const unsigned char *accTyp = sqlite3_column_text(stmt, 5);
+        int accNbr = sqlite3_column_int(stmt, 6);
+        double amount = sqlite3_column_int(stmt, 7);
+        const unsigned char *desposit = sqlite3_column_text(stmt, 8);
+        const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
+
+        printf("Account #[%d] %s, %s, %s, %s, %d, %lf,%s,%s\n", accId, name, country, phone, accTyp, accNbr, amount,desposit,withdraw);
+    }
+
+    sqlite3_finalize(stmt);
 }
