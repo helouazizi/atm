@@ -21,8 +21,8 @@ int createNewAccount(sqlite3 *db, struct User *user, struct Record *record)
     sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC); // accountType
     sqlite3_bind_int(stmt, 6, record->accountNbr);                      // accountNbr
     sqlite3_bind_double(stmt, 7, record->amount);                       // amount
-    // sqlite3_bind_text(stmt, 8, record->deposit, -1, SQLITE_STATIC);     // deposit (as TEXT)
-    // sqlite3_bind_text(stmt, 9, record->withdraw, -1, SQLITE_STATIC);    // withdraw (as TEXT)
+    sqlite3_bind_text(stmt, 8, record->deposit.year, -1, SQLITE_STATIC);     // deposit (as TEXT)
+    sqlite3_bind_text(stmt, 9, record->withdraw.year, -1, SQLITE_STATIC);    // withdraw (as TEXT)
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
