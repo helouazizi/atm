@@ -89,7 +89,8 @@ void createNewAcc(sqlite3 *db, struct User *user)
     {
         printf("\n\t\t\t\tEnter a Username: ");
         scanf("%49s", user->username);
-        if (strlen(user->username) < 3 || strlen(user->username) > 15) {
+        if (strlen(user->username) < 3 || strlen(user->username) > 15)
+        {
             printf("\n❌ Please enter a valid username {3 -> 15} characters\n");
             continue;
         }
@@ -100,12 +101,24 @@ void createNewAcc(sqlite3 *db, struct User *user)
         printf("\n❌ Username already exists. Try again.\n");
     }
 
-    printf("\n\t\t\t\tEnter a Password: ");
     struct termios oldFlags;
     disableEcho(&oldFlags);
-    scanf("%49s", user->password);
-    restoreEcho(&oldFlags);
+    while (1)
+    {
+        printf("\n\t\t\t\tEnter a Password: ");
+        scanf("%49s", user->password);
+        if (strlen(user->password) < 8 || strlen(user->password) > 15)
+        {
+            printf("\n❌ Please enter a valid password {8 -> 15} characters\n");
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
 
+    restoreEcho(&oldFlags);
     if (registerUser(db, user))
     {
         printf("\n✔ User registered successfully!\n");
