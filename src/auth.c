@@ -28,11 +28,11 @@ void loginMenu(char a[50], char pass[50])
     if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
     {
         perror("tcsetattr");
-     exit(1);
+        exit(1);
     }
 };
 
-void registerMenu(sqlite3 *db,char name[50], char password[50])
+void registerMenu(sqlite3 *db, char name[50], char password[50])
 {
 
     printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User Register:");
@@ -71,28 +71,28 @@ int usernameExists(sqlite3 *db, const char *username)
 // Register a new user - prevent duplicates
 int registerUser(sqlite3 *db, struct User *user)
 {
-        if (usernameExists(db, user->username))
-        {
-            printf("Username '%s' already exists. Choose another.\n", user->username);
-            return 0;
-        }
+    if (usernameExists(db, user->username))
+    {
+        printf("Username '%s' already exists. Choose another.\n", user->username);
+        return 0;
+    }
 
-        const char *sql = "INSERT INTO users (username, password) VALUES (?, ?);";
-        sqlite3_stmt *stmt;
-        int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-        if (rc != SQLITE_OK)
-        {
-            // fprintf(stderr, "Failed to prepare insert user statement\n");
-            return 0;
-        }
+    const char *sql = "INSERT INTO users (username, password) VALUES (?, ?);";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        // fprintf(stderr, "Failed to prepare insert user statement\n");
+        return 0;
+    }
 
-        sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_STATIC);
 
-        rc = sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
 
-        return (rc == SQLITE_DONE);
+    return (rc == SQLITE_DONE);
 }
 // Authenticate user
 int authenticateUser(sqlite3 *db, struct User *user)
@@ -120,7 +120,6 @@ int authenticateUser(sqlite3 *db, struct User *user)
     sqlite3_finalize(stmt);
     return 0;
 }
-
 
 // Remove an account owned by user
 int removeAccount(sqlite3 *db, struct User *user, int accountNbr)

@@ -4,54 +4,54 @@
 #include "header.h"
 #include <sqlite3.h>
 
-// void mainMenu(sqlite3 *db, struct User *u)
-// {
-//     int option;
-//     system("clear");
-//     printf("\n\n\t\t======= ATM =======\n\n");
-//     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
-//     printf("\n\t\t[1]- Create a new account\n");
-//     printf("\n\t\t[2]- Update account information\n");
-//     printf("\n\t\t[3]- Check accounts\n");
-//     printf("\n\t\t[4]- Check list of owned account\n");
-//     printf("\n\t\t[5]- Make Transaction\n");
-//     printf("\n\t\t[6]- Remove existing account\n");
-//     printf("\n\t\t[7]- Transfer ownership\n");
-//     printf("\n\t\t[8]- Exit\n");
-//     printf("\n\t\tYour choice: ");
-//     scanf("%d", &option);
+void mainMenu(sqlite3 *db, struct User *u)
+{
+    int option;
+    system("clear");
+    printf("\n\n\t\t======= ATM =======\n\n");
+    printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
+    printf("\n\t\t[1]- Create a new account\n");
+    printf("\n\t\t[2]- Update account information\n");
+    printf("\n\t\t[3]- Check accounts\n");
+    printf("\n\t\t[4]- Check list of owned account\n");
+    printf("\n\t\t[5]- Make Transaction\n");
+    printf("\n\t\t[6]- Remove existing account\n");
+    printf("\n\t\t[7]- Transfer ownership\n");
+    printf("\n\t\t[8]- Exit\n");
+    printf("\n\t\tYour choice: ");
+    scanf("%d", &option);
 
-//     switch (option)
-//     {
-//     case 1:
-//         createNewAcc(db, u);
-//         break;
-//     case 2:
-//         updateAccountInfo(db, u);
-//         break;
-//     case 3:
-//         checkAccountDetails(db, u);
-//         break;
-//     case 4:
-//         listAccounts(db, u);
-//         break;
-//     case 5:
-//         makeTransaction(db, u);
-//         break;
-//     case 6:
-//         removeAccount(db, u);
-//         break;
-//     case 7:
-//         transferOwnership(db, u);
-//         break;
-//     case 8:
-//         sqlite3_close(db);  // Close DB before exit
-//         exit(0);
-//         break;
-//     default:
-//         printf("Invalid operation!\n");
-//     }
-// }
+    switch (option)
+    {
+    case 1:
+        createNewAcc(db, u);
+        break;
+    case 2:
+        updateAccountInfo(db, u);
+        break;
+    case 3:
+        checkAccountDetails(db, u);
+        break;
+    case 4:
+        listAccounts(db, u);
+        break;
+    case 5:
+        makeTransaction(db, u);
+        break;
+    case 6:
+        removeAccount(db, u);
+        break;
+    case 7:
+        transferOwnership(db, u);
+        break;
+    case 8:
+        sqlite3_close(db);  // Close DB before exit
+        exit(0);
+        break;
+    default:
+        printf("Invalid operation!\n");
+    }
+}
 
 void initMenu(sqlite3 *db, struct User *u)
 {
