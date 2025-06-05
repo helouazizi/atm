@@ -1,4 +1,6 @@
 #include <termios.h>
+#include <stdlib.h>
+#include <string.h>
 #include "header.h"
 
 void loginMenu(char a[50], char pass[50])
@@ -8,6 +10,7 @@ void loginMenu(char a[50], char pass[50])
     system("clear");
     printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User Login:");
     scanf("%s", a);
+    printf("%s  the user name  \n,",a);
 
     // disabling echo
     tcgetattr(fileno(stdin), &oflags);
@@ -27,7 +30,7 @@ void loginMenu(char a[50], char pass[50])
     if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
     {
         perror("tcsetattr");
-        return exit(1);
+     exit(1);
     }
 };
 

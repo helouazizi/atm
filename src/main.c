@@ -4,7 +4,6 @@
 #include "header.h"
 #include <sqlite3.h>
 
-
 // void mainMenu(sqlite3 *db, struct User *u)
 // {
 //     int option;
@@ -73,23 +72,18 @@ void initMenu(sqlite3 *db, struct User *u)
         {
         case 1:
             loginMenu(u->username, u->password);
-            if (loadUserFromDB(db, u->username, u)) // You must pass db here
+            const char *pass = loadUserFromDB(db, u->username);
+
+            if (strcmp(u->password, pass) == 0)
             {
-                if (strcmp(u->password, getPassword(*u)) == 0)
-                {
-                    printf("\n\nPassword Match!\n");
-                }
-                else
-                {
-                    printf("\nWrong password!\n");
-                    exit(1);
-                }
+                printf("\n\nPassword Match!\n");
             }
             else
             {
-                printf("\nUser not found!\n");
+                printf("\nWrong password!\n");
                 exit(1);
             }
+
             r = 1;
             break;
         case 2:
@@ -107,13 +101,16 @@ void initMenu(sqlite3 *db, struct User *u)
     }
 }
 
-int main() {
+int main()
+{
     sqlite3 *db = openDatabase("./data/db.db");
-    if (!db) {
+    if (!db)
+    {
         return 1; // error opening DB
     }
 
-    if (!createTables(db)) {
+    if (!createTables(db))
+    {
         printf("Failed to create tables.\n");
         sqlite3_close(db);
         return 1;
@@ -121,12 +118,10 @@ int main() {
 
     printf("Tables created successfully.\n");
 
-    struct User *user ;
+    struct User *user = malloc(sizeof(struct User));
 
-    initMenu(db,user);
-
+    initMenu(db, user);
 
     sqlite3_close(db);
     return 0;
 }
-

@@ -131,3 +131,24 @@ void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
 
     sqlite3_finalize(stmt);
 }
+
+char *loadUserFromDB(sqlite3 *db, char *username)
+{
+    const char *login = "SELECT password FROM users WHERE username = ? ;";
+    sqlite3_stmt *stm;
+    int rc = sqlite3_prepare_v2(db, login, -1, &stm, NULL);
+
+    sqlite3_bind_text(&stm,1,username,-1,SQLITE_STATIC);
+
+    // now lete step ou stetmnets
+
+    rc = sqlite3_step(stm);
+
+    if (rc == SQLITE_ROW){
+       
+        const char * pass = sqlite3_column_text(stm,0);
+        return pass;
+    }
+    return "NOT FOUND" ;
+
+}
