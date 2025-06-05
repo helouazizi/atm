@@ -105,41 +105,6 @@ int createTables(sqlite3 *db)
 //     }
 // }
 
-// // Check specific account details with interest info
-// void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
-// {
-//     const char *sql = "SELECT accountNbr, balance, accountType, depositDate FROM accounts WHERE accountNbr = ? AND ownerUsername = ?;";
-//     sqlite3_stmt *stmt;
-//     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-//     if (rc != SQLITE_OK)
-//     {
-//         printf("Failed to prepare select account statement\n");
-//         return;
-//     }
-
-//     sqlite3_bind_int(stmt, 1, accountNbr);
-//     sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
-
-//     rc = sqlite3_step(stmt);
-
-//     if (rc == SQLITE_ROW)
-//     {
-//         int accNbr = sqlite3_column_int(stmt, 0);
-//         double balance = sqlite3_column_double(stmt, 1);
-//         const unsigned char *accType = sqlite3_column_text(stmt, 2);
-//         const unsigned char *depositDate = sqlite3_column_text(stmt, 3);
-
-//         printf("Account #%d [%s]: Balance = %.2f\n", accNbr, accType, balance);
-//         displayInterest((const char *)accType, balance, (const char *)depositDate);
-//     }
-//     else
-//     {
-//         printf("No account found with that number under your ownership.\n");
-//     }
-
-//     sqlite3_finalize(stmt);
-// }
-
 // // Make a transaction: deposit or withdraw (positive or negative amount)
 // int makeTransaction(sqlite3 *db, struct User *user, int accountNbr, double amount)
 // {

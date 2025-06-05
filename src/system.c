@@ -91,3 +91,44 @@ void listAccounts(sqlite3 *db, struct User *user)
 
     sqlite3_finalize(stmt);
 }
+
+
+
+// Check specific account details with interest info
+void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
+{
+    const char *sql = "SELECT * FROM records WHERE accountNbr = ? ;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        printf("Failed to prepare select account statement\n");
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, accountNbr);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc == SQLITE_ROW)
+    {
+         int accId = sqlite3_column_int(stmt, 0);
+        const unsigned char *name = sqlite3_column_text(stmt, 2);
+        const unsigned char *country = sqlite3_column_text(stmt, 3);
+        const unsigned char *phone = sqlite3_column_text(stmt, 4);
+        const unsigned char *accTyp = sqlite3_column_text(stmt, 5);
+        int accNbr = sqlite3_column_int(stmt, 6);
+        double amount = sqlite3_column_int(stmt, 7);
+        const unsigned char *desposit = sqlite3_column_text(stmt, 8);
+        const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
+
+        printf("Account #[%d] %s, %s, %s, %s, %d, %lf,%s,%s\n", accId, name, country, phone, accTyp, accNbr, amount,desposit,withdraw);
+        // displayInterest((const char *)accType, balance, (const char *)depositDate);
+    }
+    else
+    {
+        printf("No account found with that number under your ownership.\n");
+    }
+
+    sqlite3_finalize(stmt);
+}
