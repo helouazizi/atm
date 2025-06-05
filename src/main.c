@@ -27,22 +27,22 @@ void mainMenu(sqlite3 *db, struct User *u)
         createNewAcc(db, u);
         break;
     case 2:
-        updateAccountInfo(db, u);
+        // updateAccountInfo(db, u);
         break;
     case 3:
-        checkAccountDetails(db, u);
+        // checkAccountDetails(db, u);
         break;
     case 4:
-        listAccounts(db, u);
+        // listAccounts(db, u);
         break;
     case 5:
-        makeTransaction(db, u);
+        // makeTransaction(db, u);
         break;
     case 6:
-        removeAccount(db, u);
+        // removeAccount(db, u);
         break;
     case 7:
-        transferOwnership(db, u);
+        // transferOwnership(db, u);
         break;
     case 8:
         sqlite3_close(db);  // Close DB before exit
@@ -72,10 +72,8 @@ void initMenu(sqlite3 *db, struct User *u)
         {
         case 1:
             loginMenu(u->username, u->password);
-            const char *pass = loadUserFromDB(db, u->username);
-            // printf("%s pass",pass);
-
-            if (strcmp(u->password, pass) == 0)
+            int n = authenticateUser(db, u);
+            if (n != 0)
             {
                 printf("\n\nPassword Match!\n");
             }
@@ -88,8 +86,7 @@ void initMenu(sqlite3 *db, struct User *u)
             r = 1;
             break;
         case 2:
-            // registerMenu(u->username, u->password);
-            // saveUserToDB(db, u);  // Also pass db here
+            createNewAcc(db,u);
             r = 1;
             break;
         case 3:
@@ -122,6 +119,7 @@ int main()
     struct User *user = malloc(sizeof(struct User));
 
     initMenu(db, user);
+    mainMenu(db,user);
 
     sqlite3_close(db);
     return 0;
