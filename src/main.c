@@ -73,6 +73,7 @@ void initMenu(sqlite3 *db, struct User *u)
         case 1:
             loginMenu(u->username, u->password);
             const char *pass = loadUserFromDB(db, u->username);
+            // printf("%s pass",pass);
 
             if (strcmp(u->password, pass) == 0)
             {

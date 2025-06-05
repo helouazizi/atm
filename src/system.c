@@ -1,4 +1,5 @@
 #include "header.h"
+#include <string.h>
 
 // Create new record for a user
 int createNewAccount(sqlite3 *db, struct User *user, struct Record *record)
@@ -134,21 +135,31 @@ void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
 
 char *loadUserFromDB(sqlite3 *db, char *username)
 {
-    const char *login = "SELECT password FROM users WHERE username = ? ;";
-    sqlite3_stmt *stm;
-    int rc = sqlite3_prepare_v2(db, login, -1, &stm, NULL);
+    const char *sql = "SELECT password FROM users WHERE username = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_text(&stm,1,username,-1,SQLITE_STATIC);
-
-    // now lete step ou stetmnets
-
-    rc = sqlite3_step(stm);
-
-    if (rc == SQLITE_ROW){
-       
-        const char * pass = sqlite3_column_text(stm,0);
-        return pass;
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return NULL;
     }
-    return "NOT FOUND" ;
 
+    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+
+    char *password = NULL;
+    if (rc == SQLITE_ROW)
+    {
+        const unsigned char *pass = sqlite3_column_text(stmt, 0);
+        password = strdup((const char *)pass);  // copy to heap
+    }
+
+    sqlite3_finalize(stmt);
+
+    if (password)
+        return password;
+    else
+        return strdup("NOT FOUND");
 }
