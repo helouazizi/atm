@@ -119,3 +119,34 @@ int authenticateUser(sqlite3 *db, struct User *user)
     sqlite3_finalize(stmt);
     return 0;
 }
+
+
+// Remove an account owned by user
+int removeAccount(sqlite3 *db, struct User *user, int accountNbr)
+{
+    const char *sql = "DELETE FROM records WHERE accountNbr = ? AND name = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare delete account statement\n");
+        return 0;
+    }
+
+    sqlite3_bind_int(stmt, 1, accountNbr);
+    sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (rc == SQLITE_DONE)
+    {
+        printf("Account #%d removed successfully.\n", accountNbr);
+        return 1;
+    }
+    else
+    {
+        printf("Failed to remove account.\n");
+        return 0;
+    }
+}
