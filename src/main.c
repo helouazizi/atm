@@ -24,7 +24,7 @@ void mainMenu(sqlite3 *db, struct User *u)
     switch (option)
     {
     case 1:
-        createNewAcc(db, u);
+        // add record
         break;
     case 2:
         // updateAccountInfo(db, u);
