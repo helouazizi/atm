@@ -1,8 +1,12 @@
 #include "header.h"
 #include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <stdio.h>
 
+#define MAX_ATTEMPTS 3
 // Create new record for a user
-int createNewAccount(sqlite3 *db, struct User *user, struct Record *record)
+int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
 {
     // Default balance 0, and depositDate is current date (for simplicity, pass NULL or set externally)
     const char *sql = "INSERT INTO records (user_id,name, country, phone, accountType,accountNbr,amount,deposit,withdraw) VALUES (?,?,?,?,?,?,?,?,?);";
@@ -133,33 +137,167 @@ void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
     sqlite3_finalize(stmt);
 }
 
-char *loadUserFromDB(sqlite3 *db, char *username)
+void recordMenu(sqlite3 *db, struct User *user)
 {
-    const char *sql = "SELECT password FROM users WHERE username = ?;";
-    sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    system("clear");
+    printf("\n\n\n\t\t\t\tBank Management System");
+    printf("\n\t\t\t\tCreate Account");
 
-    if (rc != SQLITE_OK)
+    struct Record *r = malloc(sizeof(struct Record));
+    if (!r)
     {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        return NULL;
+        printf("Memory allocation failed.\n");
+        return;
     }
 
-    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
+    r->userId = user->id;
+    strcpy(r->name, user->username);
 
-    rc = sqlite3_step(stmt);
-
-    char *password = NULL;
-    if (rc == SQLITE_ROW)
+    // Date
+    int attempts = 0;
+    while (attempts < MAX_ATTEMPTS)
     {
-        const unsigned char *pass = sqlite3_column_text(stmt, 0);
-        password = strdup((const char *)pass);  // copy to heap
+        printf("\nEnter date (MM/DD/YYYY): ");
+        if (scanf("%d %d %d", &r->deposit.month, &r->deposit.day, &r->deposit.year) == 3 &&
+            r->deposit.month >= 1 && r->deposit.month <= 12 &&
+            r->deposit.day >= 1 && r->deposit.day <= 31 &&
+            r->deposit.year >= 1900)
+        {
+            break;
+        }
+        else
+        {
+            printf("❌ Invalid date. Try again.\n");
+            attempts++;
+            while (getchar() != '\n')
+                ; // clear input
+        }
+        if (attempts == MAX_ATTEMPTS)
+        {
+            printf("❌ Too many invalid attempts. Exiting...\n");
+            exit(1);
+        }
+    }
+    getchar(); // clear newline
+
+    // Country
+    attempts = 0;
+    while (attempts < MAX_ATTEMPTS)
+    {
+        printf("Enter country: ");
+        fgets(r->country, sizeof(r->country), stdin);
+        r->country[strcspn(r->country, "\n")] = 0;
+        if (strlen(r->country) > 0)
+            break;
+
+        printf("❌ Country cannot be empty. Try again.\n");
+        attempts++;
+        if (attempts == MAX_ATTEMPTS)
+        {
+            printf("❌ Too many invalid attempts. Exiting...\n");
+            exit(1);
+        }
     }
 
-    sqlite3_finalize(stmt);
+    // Phone
+    attempts = 0;
+    while (attempts < MAX_ATTEMPTS)
+    {
+        printf("Enter phone number: ");
+        if (scanf("%d", &r->phone) == 1 && r->phone > 0)
+            break;
 
-    if (password)
-        return password;
-    else
-        return strdup("NOT FOUND");
+        printf("❌ Invalid phone number. Try again.\n");
+        attempts++;
+        while (getchar() != '\n')
+            ;
+        if (attempts == MAX_ATTEMPTS)
+        {
+            printf("❌ Too many invalid attempts. Exiting...\n");
+            exit(1);
+        }
+    }
+
+    // Account Type
+    attempts = 0;
+    while (attempts < MAX_ATTEMPTS)
+    {
+        printf("Enter account type (savings/current/fixed01/fixed02/fixed03): ");
+        scanf("%s", r->accountType);
+        if (
+            strcmp(r->accountType, "savings") == 0 ||
+            strcmp(r->accountType, "current") == 0 ||
+            strcmp(r->accountType, "fixed01") == 0 ||
+            strcmp(r->accountType, "fixed02") == 0 ||
+            strcmp(r->accountType, "fixed03") == 0)
+            break;
+
+        printf("❌ Invalid account type. Try again.\n");
+        attempts++;
+        if (attempts == MAX_ATTEMPTS)
+        {
+            printf("❌ Too many invalid attempts. Exiting...\n");
+            exit(1);
+        }
+    }
+
+    // Account Number
+    attempts = 0;
+    while (attempts < MAX_ATTEMPTS)
+    {
+        printf("Enter account number: ");
+        if (scanf("%d", &r->accountNbr) == 1 && r->accountNbr > 0)
+            break;
+
+        printf("❌ Invalid account number. Try again.\n");
+        attempts++;
+        while (getchar() != '\n')
+            ;
+        if (attempts == MAX_ATTEMPTS)
+        {
+            printf("❌ Too many invalid attempts. Exiting...\n");
+            exit(1);
+        }
+    }
+
+    // Amount
+    attempts = 0;
+    while (attempts < MAX_ATTEMPTS)
+    {
+        printf("Enter amount to deposit: ");
+        if (scanf("%lf", &r->amount) == 1 && r->amount > 0)
+            break;
+
+        printf("❌ Invalid amount. Try again.\n");
+        attempts++;
+        while (getchar() != '\n')
+            ;
+        if (attempts == MAX_ATTEMPTS)
+        {
+            printf("❌ Too many invalid attempts. Exiting...\n");
+            exit(1);
+        }
+    }
+
+    int i = createNewRecord(db, user, r);
+    if (i != SQLITE_DONE)
+    {
+        printf("\n✅ Account not saved please try later\n");
+        promptContinueOrExit(db, user);
+    }
+
+    free(r);
+    printf("\n✅ Acccount created successfully!\n");
+    promptContinueOrExit(db, user);
+
+    // Optional: Print summary
+    // printf("\n--- Record Summary ---\n");
+    // printf("User ID: %d\n", r->userId);
+    // printf("Username: %s\n", r->name);
+    // printf("Deposit Date: %02d/%02d/%d\n", r->deposit.month, r->deposit.day, r->deposit.year);
+    // printf("Country: %s\n", r->country);
+    // printf("Phone Number: %d\n", r->phone);
+    // printf("Account Type: %s\n", r->accountType);
+    // printf("Account Number: %d\n", r->accountNbr);
+    // printf("Deposit Amount: %.2lf\n", r->amount);
 }

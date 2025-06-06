@@ -28,6 +28,8 @@ struct User {
     char password[50];
 };
 
+void promptContinueOrExit(sqlite3 *db, struct User *usr);
+
 
 // ========================== database functions ================================//
 
@@ -40,10 +42,10 @@ void createNewAcc(sqlite3 *db,struct User *user);
 int usernameExists(sqlite3 *db, const char *username);
 int authenticateUser(sqlite3 *db, struct User *user);
 int registerUser(sqlite3 *db, struct User *user);
-char *loadUserFromDB(sqlite3 *db, char *username);
 
 //=========================== system functions ==========================//
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue);
+void recordMenu(sqlite3 *db, struct User *user);
 
 
 // void mainMenu(sqlite3 *db, struct User *user);

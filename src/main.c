@@ -25,6 +25,7 @@ void mainMenu(sqlite3 *db, struct User *u)
     {
     case 1:
         // add record
+        recordMenu(db,u);
         break;
     case 2:
         // updateAccountInfo(db, u);
@@ -99,6 +100,30 @@ void initMenu(sqlite3 *db, struct User *u)
     }
 }
 
+void promptContinueOrExit(sqlite3 *db, struct User *usr) {
+    int choice;
+    int attempts = 0;
+
+    while (attempts < 3) {
+        printf("\n\nEnter 1 to return to the main menu or 0 to exit: ");
+        if (scanf("%d", &choice) == 1 && (choice == 0 || choice == 1)) {
+            if (choice == 1) {
+                mainMenu(db,usr);
+                return;
+            } else {
+                printf("Exiting the program. Goodbye!\n");
+                exit(0);
+            }
+        } else {
+            printf("❌ Invalid input. Please enter 1 or 0.\n");
+            attempts++;
+            while (getchar() != '\n'); // clear input buffer
+        }
+    }
+
+    printf("❌ Too many invalid attempts. Exiting...\n");
+    exit(1);
+}
 int main()
 {
     sqlite3 *db = openDatabase("./data/db.db");
