@@ -25,7 +25,7 @@ void mainMenu(sqlite3 *db, struct User *u)
     {
     case 1:
         // add record
-        recordMenu(db,u);
+        recordMenu(db, u);
         break;
     case 2:
         // updateAccountInfo(db, u);
@@ -46,7 +46,7 @@ void mainMenu(sqlite3 *db, struct User *u)
         // transferOwnership(db, u);
         break;
     case 8:
-        sqlite3_close(db);  // Close DB before exit
+        sqlite3_close(db); // Close DB before exit
         exit(0);
         break;
     default:
@@ -87,7 +87,7 @@ void initMenu(sqlite3 *db, struct User *u)
             r = 1;
             break;
         case 2:
-            createNewAcc(db,u);
+            createNewAcc(db, u);
             r = 1;
             break;
         case 3:
@@ -100,30 +100,41 @@ void initMenu(sqlite3 *db, struct User *u)
     }
 }
 
-void promptContinueOrExit(sqlite3 *db, struct User *usr) {
+void promptContinueOrExit(sqlite3 *db, struct User *usr)
+{
     int choice;
     int attempts = 0;
 
-    while (attempts < 3) {
+    while (attempts < 3)
+    {
         printf("\n\nEnter 1 to return to the main menu or 0 to exit: ");
-        if (scanf("%d", &choice) == 1 && (choice == 0 || choice == 1)) {
-            if (choice == 1) {
-                mainMenu(db,usr);
+        if (scanf("%d", &choice) == 1 && (choice == 0 || choice == 1))
+        {
+            if (choice == 1)
+            {
+                mainMenu(db, usr);
                 return;
-            } else {
+            }
+            else
+            {
                 printf("Exiting the program. Goodbye!\n");
                 exit(0);
             }
-        } else {
+        }
+        else
+        {
             printf("❌ Invalid input. Please enter 1 or 0.\n");
             attempts++;
-            while (getchar() != '\n'); // clear input buffer
+            while (getchar() != '\n')
+                ; // clear input buffer
         }
     }
 
     printf("❌ Too many invalid attempts. Exiting...\n");
     exit(1);
 }
+
+
 int main()
 {
     sqlite3 *db = openDatabase("./data/db.db");
@@ -144,7 +155,7 @@ int main()
     struct User *user = malloc(sizeof(struct User));
 
     initMenu(db, user);
-    mainMenu(db,user);
+    mainMenu(db, user);
 
     sqlite3_close(db);
     return 0;
