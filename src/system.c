@@ -49,7 +49,7 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
     }
 
     printf("✅ Record successfully saved to database.\n");
-    return 1;
+    return 101;
 }
 // Update phone or country for user by acount id
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue)
@@ -173,7 +173,7 @@ void recordMenu(sqlite3 *db, struct User *user)
     int attempts = 0;
     while (attempts < MAX_ATTEMPTS)
     {
-        printf("\nEnter date (MM/DD/YYYY): ");
+        printf("\nEnter date (MM DD YYYY): ");
         if (scanf("%d %d %d", &r->deposit.month, &r->deposit.day, &r->deposit.year) == 3 &&
             r->deposit.month >= 1 && r->deposit.month <= 12 &&
             r->deposit.day >= 1 && r->deposit.day <= 31 &&
