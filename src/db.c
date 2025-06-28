@@ -4,52 +4,57 @@
 #include <header.h>
 #include <stdlib.h>
 
-static char *openFile(char *path, size_t *out_size)
+char *read_file(const char *path, size_t *out_size)
 {
-
-    FILE *fp = fopen(path, "rb");
+    FILE *fp = fopen(path, "rb"); /* always binary */
     if (!fp)
     {
-        perror("cant open schema file");
+        perror("fopen");
         return NULL;
     }
 
-    //  lets get the file size
-    if (fseek(fp, 0L, SEEK_END) != 0)
+    if (fseek(fp, 0, SEEK_END) != 0)
     {
+        perror("fseek");
         fclose(fp);
         return NULL;
     }
-
-    long size = ftell(fp);
-    if (size < 0)
+    long len = ftell(fp);
+    if (len < 0)
     {
+        perror("ftell");
         fclose(fp);
         return NULL;
     }
+    rewind(fp);
 
-    // } lets allocate a buffer with this size +1 for terminated operator
-    char *buf = malloc((size_t)size + 1);
+    char *buf = malloc((size_t)len + 1);
     if (!buf)
     {
+        perror("malloc");
         fclose(fp);
         return NULL;
     }
 
-    if (fread(buf, 1, (size_t)size, fp) != (size_t)size)
+    size_t n = fread(buf, 1, (size_t)len, fp);
+    if (n != (size_t)len)
     {
-        perror("cant read from schema file");
+        if (feof(fp))
+            fprintf(stderr, "Unexpected EOF (%zu/%ld)\n", n, len);
+        else
+            perror("fread");
         free(buf);
         fclose(fp);
         return NULL;
     }
+    buf[len] = '\0';
 
-    buf[size] = '\0'; // null terminator caracter
-    if (out_size)
-        *out_size = (size_t)size;
     fclose(fp);
+    if (out_size)
+        *out_size = (size_t)len;
     return buf;
 }
+
 // Open DB connection
 sqlite3 *openDatabase(const char *filename)
 {
@@ -70,7 +75,9 @@ int createTables(sqlite3 *db, char *schemaFile)
     char *errMsg = NULL;
     int rc = SQLITE_ERROR;
 
-    sql = openFile(schemaFile, NULL);
+    sql = read_file(schemaFile, NULL);
+    printf("Schema content:\n%s\n", sql);
+
     if (!sql)
     {
         fprintf(stderr, "Could not read %s\n", schemaFile);

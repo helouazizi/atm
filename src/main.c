@@ -152,10 +152,10 @@ int main()
 
     printf("Tables created successfully.\n");
 
-    struct User *user = malloc(sizeof(struct User));
+    // struct User *user = malloc(sizeof(struct User));
 
-    initMenu(db, user);
-    mainMenu(db, user);
+    // initMenu(db, user);
+    // mainMenu(db, user);
 
     sqlite3_close(db);
     return 0;
