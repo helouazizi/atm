@@ -2,11 +2,12 @@
 #include <string.h>
 #include <sqlite3.h>
 #include <header.h>
+#include <stdlib.h>
 
 static char *openFile(char *path, size_t *out_size)
 {
 
-    FILE *fp = fopen(path, out_size);
+    FILE *fp = fopen(path, "rb");
     if (!fp)
     {
         perror("cant open schema file");
@@ -29,7 +30,25 @@ static char *openFile(char *path, size_t *out_size)
 
     // } lets allocate a buffer with this size +1 for terminated operator
     char *buf = malloc((size_t)size + 1);
-    
+    if (!buf)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    if (fread(buf, 1, (size_t)size, fp) != (size_t)size)
+    {
+        perror("cant read from schema file");
+        free(buf);
+        fclose(fp);
+        return NULL;
+    }
+
+    buf[size] = '\0'; // null terminator caracter
+    if (out_size)
+        *out_size = (size_t)size;
+    fclose(fp);
+    return buf;
 }
 // Open DB connection
 sqlite3 *openDatabase(const char *filename)
@@ -44,51 +63,47 @@ sqlite3 *openDatabase(const char *filename)
     return db;
 }
 
-int createTables(sqlite3 *db)
+int createTables(sqlite3 *db, char *schemaFile)
 {
 
-    const char *schemaPath = "/data/schema.sql";
-
-    const FILE *file = fopen(schemaPath, "r");
-
-    const char *Users =
-        "CREATE TABLE IF NOT EXISTS users ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "username TEXT UNIQUE NOT NULL, "
-        "password TEXT NOT NULL"
-        ");";
-
-    const char *Records =
-        "CREATE TABLE IF NOT EXISTS records ("
-        "id INTEGER PRIMARY KEY, "
-        "user_id INTEGER NOT NULL, "
-        "name TEXT, "
-        "country TEXT, "
-        "phone TEXT, "
-        "accountType TEXT, "
-        "accountNbr INTEGER, "
-        "amount REAL, "
-        "deposit TEXT, "
-        "withdraw TEXT, "
-        "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
-        ");";
-
+    char *sql = NULL;
     char *errMsg = NULL;
+    int rc = SQLITE_ERROR;
+
+    sql = openFile(schemaFile, NULL);
+    if (!sql)
+    {
+        fprintf(stderr, "Could not read %s\n", schemaFile);
+        return rc;
+    }
+
+    // const char *Users =
+    //     "CREATE TABLE IF NOT EXISTS users ("
+    //     "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+    //     "username TEXT UNIQUE NOT NULL, "
+    //     "password TEXT NOT NULL"
+    //     ");";
+
+    // const char *Records =
+    //     "CREATE TABLE IF NOT EXISTS records ("
+    //     "id INTEGER PRIMARY KEY, "
+    //     "user_id INTEGER NOT NULL, "
+    //     "name TEXT, "
+    //     "country TEXT, "
+    //     "phone TEXT, "
+    //     "accountType TEXT, "
+    //     "accountNbr INTEGER, "
+    //     "amount REAL, "
+    //     "deposit TEXT, "
+    //     "withdraw TEXT, "
+    //     "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+    //     ");";
 
     // Execute create users table
-    int rc = sqlite3_exec(db, Users, NULL, NULL, &errMsg);
+    rc = sqlite3_exec(db, sql, NULL, NULL, &errMsg);
     if (rc != SQLITE_OK)
     {
         fprintf(stderr, "SQL error creating users table: %s\n", errMsg);
-        sqlite3_free(errMsg);
-        return 0;
-    }
-
-    // Execute create accounts table
-    rc = sqlite3_exec(db, Records, NULL, NULL, &errMsg);
-    if (rc != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error creating accounts table: %s\n", errMsg);
         sqlite3_free(errMsg);
         return 0;
     }

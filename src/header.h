@@ -34,7 +34,7 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr);
 // ========================== database functions ================================//
 
 sqlite3 *openDatabase(const char *filename);
-int createTables(sqlite3 *db);
+int createTables(sqlite3 *db, char *schemaFile);
 
 //=========================== Authentication functions ==========================//
 void loginMenu(char a[50], char pass[50]);

@@ -134,16 +134,16 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
     exit(1);
 }
 
-
 int main()
 {
-    sqlite3 *db = openDatabase("./data/db.db");
+    sqlite3 *db = openDatabase("./data/atm.db");
     if (!db)
     {
+        printf("Failed to to open  db.\n");
         return 1; // error opening DB
     }
 
-    if (!createTables(db))
+    if (!createTables(db, "./data/schema.sql"))
     {
         printf("Failed to create tables.\n");
         sqlite3_close(db);
