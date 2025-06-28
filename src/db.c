@@ -3,12 +3,39 @@
 #include <sqlite3.h>
 #include <header.h>
 
+static char *openFile(char *path, size_t *out_size)
+{
+
+    FILE *fp = fopen(path, out_size);
+    if (!fp)
+    {
+        perror("cant open schema file");
+        return NULL;
+    }
+
+    //  lets get the file size
+    if (fseek(fp, 0L, SEEK_END) != 0)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    long size = ftell(fp);
+    if (size < 0) 
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+
+    
+}
 // Open DB connection
 sqlite3 *openDatabase(const char *filename)
 {
     sqlite3 *db;
     int rc = sqlite3_open(filename, &db);
-    if (rc)
+    if (rc != SQLITE_OK)
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return NULL;
@@ -18,6 +45,11 @@ sqlite3 *openDatabase(const char *filename)
 
 int createTables(sqlite3 *db)
 {
+
+    const char *schemaPath = "/data/schema.sql";
+
+    const FILE *file = fopen(schemaPath, "r");
+
     const char *Users =
         "CREATE TABLE IF NOT EXISTS users ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -62,8 +94,6 @@ int createTables(sqlite3 *db)
 
     return 1; // Success
 }
-
-
 
 // // Calculate and display interest for given account type and deposit date
 // void displayInterest(const char *accountType, double balance, const char *depositDate)
