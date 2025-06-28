@@ -21,13 +21,14 @@ static char *openFile(char *path, size_t *out_size)
     }
 
     long size = ftell(fp);
-    if (size < 0) 
+    if (size < 0)
     {
         fclose(fp);
         return NULL;
     }
 
-
+    // } lets allocate a buffer with this size +1 for terminated operator
+    char *buf = malloc((size_t)size + 1);
     
 }
 // Open DB connection
