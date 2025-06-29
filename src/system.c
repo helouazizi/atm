@@ -6,9 +6,8 @@
 
 #define MAX_ATTEMPTS 3
 // Create new record for a user
-
 int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
-    const char *sql = "INSERT INTO records (user_id, name, country, phone, accountType, accountNbr, amount, deposit, withdraw) "
+    const char *sql = "INSERT INTO records (user_id, owner, country, phone, accountType, accountNbr, amount, deposit, withdraw) "
                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     sqlite3_stmt *stmt;
@@ -18,28 +17,28 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
         return 0;
     }
 
-    // Convert deposit and withdraw dates to YYYY-MM-DD format
     char depositDate[11];
     char withdrawDate[11];
 
     snprintf(depositDate, sizeof(depositDate), "%04d-%02d-%02d",
              record->deposit.year, record->deposit.month, record->deposit.day);
-
     snprintf(withdrawDate, sizeof(withdrawDate), "%04d-%02d-%02d",
              record->withdraw.year, record->withdraw.month, record->withdraw.day);
 
-    // Bind parameters safely
-    sqlite3_bind_int(stmt, 1, user->id);                                 // user_id
-    sqlite3_bind_text(stmt, 2, record->name, -1, SQLITE_STATIC);         // name
-    sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC);      // country
-    sqlite3_bind_int(stmt, 4, record->phone);                            // phone
-    sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC);  // accountType
-    sqlite3_bind_int(stmt, 6, record->accountNbr);                       // accountNbr
-    sqlite3_bind_double(stmt, 7, record->amount);                        // amount
-    sqlite3_bind_text(stmt, 8, depositDate, -1, SQLITE_STATIC);          // deposit
-    sqlite3_bind_text(stmt, 9, withdrawDate, -1, SQLITE_STATIC);         // withdraw
+    sqlite3_bind_int(stmt, 1, user->id);                                   // user_id
+    sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);          // name
+    sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC);       // country
 
-    // Execute the statement
+    char phoneStr[20];
+    snprintf(phoneStr, sizeof(phoneStr), "%d", record->phone);
+    sqlite3_bind_text(stmt, 4, phoneStr, -1, SQLITE_TRANSIENT);           // phone (as TEXT)
+
+    sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC);   // accountType
+    sqlite3_bind_int(stmt, 6, record->accountNbr);                        // accountNbr
+    sqlite3_bind_double(stmt, 7, record->amount);                         // amount
+    sqlite3_bind_text(stmt, 8, depositDate, -1, SQLITE_STATIC);           // deposit
+    sqlite3_bind_text(stmt, 9, withdrawDate, -1, SQLITE_STATIC);          // withdraw
+
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
@@ -51,6 +50,9 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
     printf("✅ Record successfully saved to database.\n");
     return 101;
 }
+
+
+
 // Update phone or country for user by acount id
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue)
 {

@@ -134,6 +134,8 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
     exit(1);
 }
 
+
+
 int main()
 {
     sqlite3 *db = openDatabase("./data/atm.db");
@@ -152,10 +154,10 @@ int main()
 
     printf("Tables created successfully.\n");
 
-    // struct User *user = malloc(sizeof(struct User));
+    struct User *user = malloc(sizeof(struct User));
 
-    // initMenu(db, user);
-    // mainMenu(db, user);
+    initMenu(db, user);
+    mainMenu(db, user);
 
     sqlite3_close(db);
     return 0;

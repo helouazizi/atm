@@ -55,13 +55,19 @@ int usernameExists(sqlite3 *db, const char *username)
 // Register a new user
 int registerUser(sqlite3 *db, struct User *user)
 {
+    /* 1. Reject duplicate usernames */
     if (usernameExists(db, user->username))
     {
         printf("Username '%s' already exists. Choose another.\n", user->username);
         return 0;
     }
 
-    const char *sql = "INSERT INTO users (username, password) VALUES (?, ?);";
+    /* 2. Prepare the INSERT */
+    const char *sql =
+        "INSERT INTO users (username, password) VALUES (?, ?);";
+        /* If you’re on SQLite ≥ 3.35 you could do:
+           "INSERT INTO users (username, password) VALUES (?, ?)
+            RETURNING id;"  and read the id from sqlite3_column_… */
     sqlite3_stmt *stmt;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
@@ -70,13 +76,27 @@ int registerUser(sqlite3 *db, struct User *user)
         return 0;
     }
 
-    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_STATIC);
+    /* 3. Bind parameters */
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_TRANSIENT);
 
+    /* 4. Execute */
     int rc = sqlite3_step(stmt);
+
+    /* 5. If it worked, grab the auto‑generated rowid */
+    if (rc == SQLITE_DONE)
+    {
+        /* sqlite3_last_insert_rowid returns a 64‑bit value.       */
+        /* Cast only if you _know_ your ids fit into 32 bits.      */
+        sqlite3_int64 newId = sqlite3_last_insert_rowid(db);
+        user->id = (int)newId;   /* or keep it as sqlite3_int64   */
+    }
+
+    /* 6. Clean up */
     sqlite3_finalize(stmt);
     return rc == SQLITE_DONE;
 }
+
 
 // Create a new user account (register flow)
 void createNewAcc(sqlite3 *db, struct User *user)
@@ -121,40 +141,51 @@ void createNewAcc(sqlite3 *db, struct User *user)
     restoreEcho(&oldFlags);
     if (registerUser(db, user))
     {
-        printf("\n✔ User registered successfully!\n");
+        printf("\n✔ Successfully created your acount\n");
     }
     else
     {
-        printf("\n❌ Failed to register user.\n");
+        printf("\n❌ Failed to create your acount.\n");
     }
 }
 
 // Authenticate user
 int authenticateUser(sqlite3 *db, struct User *user)
 {
-    const char *sql = "SELECT password FROM users WHERE username = ?;";
+    const char *sql = "SELECT id, password FROM users WHERE username = ?;";
     sqlite3_stmt *stmt;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        fprintf(stderr, "Failed to prepare authentication query\n");
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
 
-    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-    int rc = sqlite3_step(stmt);
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_TRANSIENT);
 
+    int rc = sqlite3_step(stmt);
     int authenticated = 0;
 
     if (rc == SQLITE_ROW)
     {
-        const unsigned char *dbPassword = sqlite3_column_text(stmt, 0);
-        authenticated = strcmp((const char *)dbPassword, user->password) == 0;
+        const unsigned char *dbPassword = sqlite3_column_text(stmt, 1);
+        int id = sqlite3_column_int(stmt, 0);
+        
+        if (strcmp((const char *)dbPassword, user->password) == 0)
+        {
+            authenticated = 1;
+            user->id = id;
+        }
+    }
+    else if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "SQLite step error: %s\n", sqlite3_errmsg(db));
     }
 
     sqlite3_finalize(stmt);
     return authenticated;
 }
+
 
 // Remove an account owned by the user
 int removeAccount(sqlite3 *db, struct User *user, int accountNbr)
