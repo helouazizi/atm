@@ -300,7 +300,7 @@ void recordMenu(sqlite3 *db, struct User *user)
     int i = createNewRecord(db, user, r);
     if (i != SQLITE_DONE)
     {
-        printf("\n✅ Account not saved please try later\n");
+        printf("\n Account not saved please try later\n");
         promptContinueOrExit(db, user);
     }
 
