@@ -5,14 +5,38 @@
 #include <stdio.h>
 
 #define MAX_ATTEMPTS 3
+/* Return 1 if accountNbr is found in the records table, 0 otherwise */
+static int accountNumberExists(sqlite3 *db, int accountNbr)
+{
+    const char *sql = "SELECT 1 FROM records WHERE accountNbr = ? LIMIT 1;";
+    sqlite3_stmt *stmt;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        /* Preparation failed – be conservative and pretend it exists */
+        fprintf(stderr, "SQLite error: %s\n", sqlite3_errmsg(db));
+        return 1;
+    }
+
+    sqlite3_bind_int(stmt, 1, accountNbr);
+
+    int rc = sqlite3_step(stmt);
+    int exists = (rc == SQLITE_ROW); /* got at least one row → it exists */
+
+    sqlite3_finalize(stmt);
+    return exists;
+}
+
 // Create new record for a user
-int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
+int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
+{
     const char *sql = "INSERT INTO records (user_id, owner, country, phone, accountType, accountNbr, amount, deposit, withdraw) "
                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK)
+    {
         fprintf(stderr, "❌ Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
@@ -25,24 +49,25 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
     snprintf(withdrawDate, sizeof(withdrawDate), "%04d-%02d-%02d",
              record->withdraw.year, record->withdraw.month, record->withdraw.day);
 
-    sqlite3_bind_int(stmt, 1, user->id);                                   // user_id
-    sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);          // name
-    sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC);       // country
+    sqlite3_bind_int(stmt, 1, user->id);                            // user_id
+    sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);  // name
+    sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC); // country
 
     char phoneStr[20];
     snprintf(phoneStr, sizeof(phoneStr), "%d", record->phone);
-    sqlite3_bind_text(stmt, 4, phoneStr, -1, SQLITE_TRANSIENT);           // phone (as TEXT)
+    sqlite3_bind_text(stmt, 4, phoneStr, -1, SQLITE_TRANSIENT); // phone (as TEXT)
 
-    sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC);   // accountType
-    sqlite3_bind_int(stmt, 6, record->accountNbr);                        // accountNbr
-    sqlite3_bind_double(stmt, 7, record->amount);                         // amount
-    sqlite3_bind_text(stmt, 8, depositDate, -1, SQLITE_STATIC);           // deposit
-    sqlite3_bind_text(stmt, 9, withdrawDate, -1, SQLITE_STATIC);          // withdraw
+    sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC); // accountType
+    sqlite3_bind_int(stmt, 6, record->accountNbr);                      // accountNbr
+    sqlite3_bind_double(stmt, 7, record->amount);                       // amount
+    sqlite3_bind_text(stmt, 8, depositDate, -1, SQLITE_STATIC);         // deposit
+    sqlite3_bind_text(stmt, 9, withdrawDate, -1, SQLITE_STATIC);        // withdraw
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
-    if (rc != SQLITE_DONE) {
+    if (rc != SQLITE_DONE)
+    {
         fprintf(stderr, "❌ Failed to insert record: %s\n", sqlite3_errmsg(db));
         return 0;
     }
@@ -50,8 +75,6 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record) {
     printf("✅ Record successfully saved to database.\n");
     return 101;
 }
-
-
 
 // Update phone or country for user by acount id
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue)
@@ -259,18 +282,30 @@ void recordMenu(sqlite3 *db, struct User *user)
         }
     }
 
-    // Account Number
+    /* ── Account Number ───────────────────────────────────── */
     attempts = 0;
     while (attempts < MAX_ATTEMPTS)
     {
         printf("Enter account number: ");
         if (scanf("%d", &r->accountNbr) == 1 && r->accountNbr > 0)
-            break;
+        {
+            /* Does it already exist? */
+            if (!accountNumberExists(db, r->accountNbr))
+            {
+                break; /* ⇢ good, continue */
+            }
 
-        printf("❌ Invalid account number. Try again.\n");
+            printf("❌ Account number already exists. Choose another.\n");
+        }
+        else
+        {
+            printf("❌ Invalid account number. Try again.\n");
+        }
+
         attempts++;
         while (getchar() != '\n')
-            ;
+            ; /* clear leftover input */
+
         if (attempts == MAX_ATTEMPTS)
         {
             printf("❌ Too many invalid attempts. Exiting...\n");
@@ -307,15 +342,4 @@ void recordMenu(sqlite3 *db, struct User *user)
     free(r);
     printf("\n✅ Acccount created successfully!\n");
     promptContinueOrExit(db, user);
-
-    // Optional: Print summary
-    // printf("\n--- Record Summary ---\n");
-    // printf("User ID: %d\n", r->userId);
-    // printf("Username: %s\n", r->name);
-    // printf("Deposit Date: %02d/%02d/%d\n", r->deposit.month, r->deposit.day, r->deposit.year);
-    // printf("Country: %s\n", r->country);
-    // printf("Phone Number: %d\n", r->phone);
-    // printf("Account Type: %s\n", r->accountType);
-    // printf("Account Number: %d\n", r->accountNbr);
-    // printf("Deposit Amount: %.2lf\n", r->amount);
 }
