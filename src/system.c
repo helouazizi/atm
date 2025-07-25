@@ -41,7 +41,7 @@ int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
         return 0;
     }
     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2,accountNbr);
+    sqlite3_bind_int(stmt, 2, accountNbr);
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW)
     {
@@ -441,6 +441,12 @@ void removeAccount(sqlite3 *db, struct User *user)
             ;
         return;
     }
+    // check account id
+    if (checkAccount(db, user, accNbr) == 0)
+    {
+        printf("Account not found under your informations.\n");
+        return;
+    }
 
     const char *sql = "DELETE FROM records WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
@@ -483,11 +489,18 @@ void transferOwnership(sqlite3 *db, struct User *user)
     while (getchar() != '\n')
         ; // clear input
 
+    // check account id
+    if (checkAccount(db, user, accNbr) == 0)
+    {
+        printf("Account not found under your informations.\n");
+        return;
+    }
+
     printf("Enter new owner's username: ");
     fgets(newOwner, sizeof(newOwner), stdin);
     newOwner[strcspn(newOwner, "\n")] = 0;
 
-    const char *sql = "UPDATE records SET name = ? WHERE accountNbr = ? AND name = ?;";
+    const char *sql = "UPDATE records SET owner = ? WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -524,7 +537,8 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (scanf("%d", &accNbr) != 1)
     {
         printf("Invalid input.\n");
-        while (getchar() != '\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
 
@@ -538,7 +552,8 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (scanf("%d", &choice) != 1 || (choice != 1 && choice != 2))
     {
         printf("Invalid choice.\n");
-        while (getchar() != '\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
 
@@ -546,13 +561,14 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (scanf("%lf", &amount) != 1 || amount <= 0)
     {
         printf("Invalid amount.\n");
-        while (getchar() != '\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
 
     const char *sql = (choice == 1)
-        ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND owner = ?;"
-        : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND owner = ? AND amount >= ?;";
+                          ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND owner = ?;"
+                          : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND owner = ? AND amount >= ?;";
 
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
