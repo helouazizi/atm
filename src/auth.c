@@ -188,31 +188,31 @@ int authenticateUser(sqlite3 *db, struct User *user)
 
 
 // Remove an account owned by the user
-int removeAccount(sqlite3 *db, struct User *user, int accountNbr)
-{
-    const char *sql = "DELETE FROM records WHERE accountNbr = ? AND name = ?;";
-    sqlite3_stmt *stmt;
+// int removeAccount(sqlite3 *db, struct User *user, int accountNbr)
+// {
+//     const char *sql = "DELETE FROM records WHERE accountNbr = ? AND name = ?;";
+//     sqlite3_stmt *stmt;
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-    {
-        fprintf(stderr, "Failed to prepare delete statement\n");
-        return 0;
-    }
+//     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+//     {
+//         fprintf(stderr, "Failed to prepare delete statement\n");
+//         return 0;
+//     }
 
-    sqlite3_bind_int(stmt, 1, accountNbr);
-    sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
+//     sqlite3_bind_int(stmt, 1, accountNbr);
+//     sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
 
-    int rc = sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
+//     int rc = sqlite3_step(stmt);
+//     sqlite3_finalize(stmt);
 
-    if (rc == SQLITE_DONE)
-    {
-        printf("✔ Account #%d removed successfully.\n", accountNbr);
-        return 1;
-    }
-    else
-    {
-        printf("❌ Failed to remove account.\n");
-        return 0;
-    }
-}
+//     if (rc == SQLITE_DONE)
+//     {
+//         printf("✔ Account #%d removed successfully.\n", accountNbr);
+//         return 1;
+//     }
+//     else
+//     {
+//         printf("❌ Failed to remove account.\n");
+//         return 0;
+//     }
+// }

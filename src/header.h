@@ -46,20 +46,12 @@ int registerUser(sqlite3 *db, struct User *user);
 //=========================== system functions ==========================//
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue);
 void recordMenu(sqlite3 *db, struct User *user);
+void updateAccountInfo(sqlite3 *db, struct User *u);
+void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr);
+void listAccounts(sqlite3 *db, struct User *u);
+void makeTransaction(sqlite3 *db, struct User *u);
+void removeAccount(sqlite3 *db, struct User *u);
+void transferOwnership(sqlite3 *db, struct User *u);
 
-
-// void mainMenu(sqlite3 *db, struct User *user);
-
-// int createNewAccount(sqlite3 *db, struct User *user);
-// void listAccounts(sqlite3 *db, struct User *user);
-// void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr);
-// int updateAccountInfo(sqlite3 *db, struct User *user, int accountNbr, double newBalance);
-// int makeTransaction(sqlite3 *db, struct User *user, int accountNbr, double amount);
-// int removeAccount(sqlite3 *db, struct User *user, int accountNbr);
-// int transferOwnership(sqlite3 *db, struct User *user, int accountNbr, const char *newOwnerUsername);
-
-// Helpers (if still relevant, or adapt to DB if needed)
-// void stayOrReturn(int notGood, void (*f)(sqlite3 *, struct User *), sqlite3 *db, struct User *user);
-// void success(struct User *user);
 
 #endif

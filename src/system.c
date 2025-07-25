@@ -27,6 +27,33 @@ static int accountNumberExists(sqlite3 *db, int accountNbr)
     return exists;
 }
 
+// lets create a function that check if the acount is under the  current user is exist should accept db and user and accnumber
+int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
+{
+    // select the accnumber from db where the username  = user.usernme
+    // open the db and check
+    const char *sql = "SELECT accountNbr FROM records WHERE owner = ? LIMIT 1";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW)
+    {
+        int acc = sqlite3_column_int(stmt, 0);
+        if (acc == accountNbr)
+        {
+            return 1;
+        }
+    }
+    sqlite3_finalize(stmt);
+    return 0;
+}
+
 // Create new record for a user
 int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
 {
@@ -79,30 +106,37 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
 // Update phone or country for user by acount id
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue)
 {
-    if (strcmp(field, "phone") != 0 && strcmp(field, "country") != 0)
+    const char *sql = NULL;
+
+    if (strcmp(field, "phone") == 0)
+    {
+        sql = "UPDATE records SET phone = ? WHERE id = ?;";
+    }
+    else if (strcmp(field, "country") == 0)
+    {
+        sql = "UPDATE records SET country = ? WHERE id = ?;";
+    }
+    else
     {
         printf("Can only update 'phone' or 'country' fields.\n");
         return 0;
     }
 
-    char sql[128];
-    snprintf(sql, sizeof(sql), "UPDATE records SET %s = ? WHERE id = ?;", field);
-
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        fprintf(stderr, "Failed to prepare update user info statement\n");
+        fprintf(stderr, "❌ Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
 
     sqlite3_bind_text(stmt, 1, newValue, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, id, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, *id);
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
-    return (rc == SQLITE_DONE);
+    return rc == SQLITE_DONE;
 }
 
 // List all accounts of a user
@@ -342,4 +376,209 @@ void recordMenu(sqlite3 *db, struct User *user)
     free(r);
     printf("\n✅ Acccount created successfully!\n");
     promptContinueOrExit(db, user);
+}
+
+// Update account information (phone or country)
+void updateAccountInfo(sqlite3 *db, struct User *user)
+{
+    int accId;
+    char field[16];
+    char newValue[64];
+
+    printf("Enter account number to update: ");
+    if (scanf("%d", &accId) != 1)
+    {
+        printf("Invalid input.\n");
+        while (getchar() != '\n')
+            ;
+        return;
+    }
+    while (getchar() != '\n')
+        ; // clear input
+    if (accId < 1)
+    {
+        printf("Invalid account number.\n");
+        return;
+    }
+    // check account id
+    if (checkAccount(db, user, accId) == 0)
+    {
+        printf("Account not found under your informations.\n");
+        return;
+    }
+
+    printf("Which field do you want to update? (phone/country): ");
+    fgets(field, sizeof(field), stdin);
+    field[strcspn(field, "\n")] = 0; // Remove newline
+
+    // Extra validation (optional but helpful)
+    if (strcmp(field, "phone") != 0 && strcmp(field, "country") != 0)
+    {
+        printf("Invalid field. Only 'phone' or 'country' are allowed.\n");
+        return;
+    }
+
+    printf("Enter new value: ");
+    fgets(newValue, sizeof(newValue), stdin);
+    newValue[strcspn(newValue, "\n")] = 0;
+
+    if (updateUserInfo(db, &accId, field, newValue))
+    {
+        printf("✅ Account info updated successfully.\n");
+    }
+    else
+    {
+        printf("❌ Failed to update account info.\n");
+    }
+}
+
+// Remove an account by account number
+void removeAccount(sqlite3 *db, struct User *user)
+{
+    int accNbr;
+    printf("Enter account number to remove: ");
+    if (scanf("%d", &accNbr) != 1)
+    {
+        printf("Invalid input.\n");
+        while (getchar() != '\n')
+            ;
+        return;
+    }
+
+    const char *sql = "DELETE FROM records WHERE accountNbr = ? AND name = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        printf("Failed to prepare delete statement.\n");
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, accNbr);
+    sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (rc == SQLITE_DONE)
+    {
+        printf("✅ Account removed successfully.\n");
+    }
+    else
+    {
+        printf("❌ Failed to remove account.\n");
+    }
+}
+
+// Transfer ownership of an account
+void transferOwnership(sqlite3 *db, struct User *user)
+{
+    int accNbr;
+    char newOwner[64];
+    printf("Enter account number to transfer: ");
+    if (scanf("%d", &accNbr) != 1)
+    {
+        printf("Invalid input.\n");
+        while (getchar() != '\n')
+            ;
+        return;
+    }
+    while (getchar() != '\n')
+        ; // clear input
+
+    printf("Enter new owner's username: ");
+    fgets(newOwner, sizeof(newOwner), stdin);
+    newOwner[strcspn(newOwner, "\n")] = 0;
+
+    const char *sql = "UPDATE records SET name = ? WHERE accountNbr = ? AND name = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        printf("Failed to prepare transfer statement.\n");
+        return;
+    }
+
+    sqlite3_bind_text(stmt, 1, newOwner, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, accNbr);
+    sqlite3_bind_text(stmt, 3, user->username, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (rc == SQLITE_DONE)
+    {
+        printf("✅ Ownership transferred successfully.\n");
+    }
+    else
+    {
+        printf("❌ Failed to transfer ownership.\n");
+    }
+}
+
+// Make a transaction (deposit or withdraw)
+void makeTransaction(sqlite3 *db, struct User *user)
+{
+    int accNbr;
+    double amount;
+    int choice;
+
+    printf("Enter account number: ");
+    if (scanf("%d", &accNbr) != 1)
+    {
+        printf("Invalid input.\n");
+        while (getchar() != '\n')
+            ;
+        return;
+    }
+
+    printf("Enter 1 to deposit, 2 to withdraw: ");
+    if (scanf("%d", &choice) != 1 || (choice != 1 && choice != 2))
+    {
+        printf("Invalid choice.\n");
+        while (getchar() != '\n')
+            ;
+        return;
+    }
+
+    printf("Enter amount: ");
+    if (scanf("%lf", &amount) != 1 || amount <= 0)
+    {
+        printf("Invalid amount.\n");
+        while (getchar() != '\n')
+            ;
+        return;
+    }
+
+    const char *sql = (choice == 1)
+                          ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND name = ?;"
+                          : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND name = ? AND amount >= ?;";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        printf("Failed to prepare transaction statement.\n");
+        return;
+    }
+
+    sqlite3_bind_double(stmt, 1, amount);
+    sqlite3_bind_int(stmt, 2, accNbr);
+    sqlite3_bind_text(stmt, 3, user->username, -1, SQLITE_STATIC);
+    if (choice == 2)
+    {
+        sqlite3_bind_double(stmt, 4, amount);
+    }
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (rc == SQLITE_DONE)
+    {
+        printf("✅ Transaction successful.\n");
+    }
+    else
+    {
+        printf("❌ Transaction failed.\n");
+    }
 }

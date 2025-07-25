@@ -24,26 +24,41 @@ void mainMenu(sqlite3 *db, struct User *u)
     switch (option)
     {
     case 1:
-        // add record
         recordMenu(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 2:
-        // updateAccountInfo(db, u);
+        updateAccountInfo(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 3:
-        // checkAccountDetails(db, u);
+        {
+            int accNbr;
+            printf("Enter account number to check: ");
+            if (scanf("%d", &accNbr) == 1) {
+                checkAccountDetails(db, u, accNbr);
+            } else {
+                printf("Invalid account number input.\n");
+                while (getchar() != '\n');
+            }
+            promptContinueOrExit(db, u);
+        }
         break;
     case 4:
-        // listAccounts(db, u);
+        listAccounts(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 5:
-        // makeTransaction(db, u);
+        makeTransaction(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 6:
-        // removeAccount(db, u);
+        removeAccount(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 7:
-        // transferOwnership(db, u);
+        transferOwnership(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 8:
         sqlite3_close(db); // Close DB before exit
