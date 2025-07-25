@@ -32,17 +32,8 @@ void mainMenu(sqlite3 *db, struct User *u)
         promptContinueOrExit(db, u);
         break;
     case 3:
-        {
-            int accNbr;
-            printf("Enter account number to check: ");
-            if (scanf("%d", &accNbr) == 1) {
-                checkAccountDetails(db, u, accNbr);
-            } else {
-                printf("Invalid account number input.\n");
-                while (getchar() != '\n');
-            }
-            promptContinueOrExit(db, u);
-        }
+        checkAccountDetails(db, u);
+        promptContinueOrExit(db, u);
         break;
     case 4:
         listAccounts(db, u);
@@ -148,8 +139,6 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
     printf("❌ Too many invalid attempts. Exiting...\n");
     exit(1);
 }
-
-
 
 int main()
 {

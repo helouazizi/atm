@@ -5,6 +5,19 @@
 #include <stdio.h>
 
 #define MAX_ATTEMPTS 3
+// Helper function to calculate interest
+double calculateInterest(const char *type, double amount)
+{
+    if (strcmp(type, "savings") == 0)
+        return amount * 0.07;
+    else if (strcmp(type, "fixed01") == 0)
+        return amount * 0.04;
+    else if (strcmp(type, "fixed02") == 0)
+        return amount * 0.05;
+    else if (strcmp(type, "fixed03") == 0)
+        return amount * 0.08;
+    return 0.0;
+}
 /* Return 1 if accountNbr is found in the records table, 0 otherwise */
 static int accountNumberExists(sqlite3 *db, int accountNbr)
 {
@@ -30,8 +43,7 @@ static int accountNumberExists(sqlite3 *db, int accountNbr)
 // lets create a function that check if the acount is under the  current user is exist should accept db and user and accnumber
 int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
 {
-    // select the accnumber from db where the username  = user.usernme
-    // open the db and check
+    
     const char *sql = "SELECT accountNbr FROM records WHERE owner = ? AND accountNbr = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -166,21 +178,45 @@ void listAccounts(sqlite3 *db, struct User *user)
         const unsigned char *desposit = sqlite3_column_text(stmt, 8);
         const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
 
-        printf("Account #[%d] %s, %s, %s, %s, %lf$\n", accNbr, name, country, phone, accTyp, amount);
+        // printf("Account #[%d] %s, %s, %s, %s, %lf$\n", accNbr, name, country, phone, accTyp, amount);
+        printf("📄 Account #[%d]\n", accNbr);
+        printf("👤 Name: %s\n", name);
+        printf("🌍 Country: %s\n", country);
+        printf("📞 Phone: %s\n", phone);
+        printf("🏦 Type: %s\n", accTyp);
+        printf("💰 Balance: %.2lf$\n", amount);
+        puts("================================");
     }
 
     sqlite3_finalize(stmt);
 }
 
 // Check specific account details with interest info
-void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
+void checkAccountDetails(sqlite3 *db, struct User *user)
 {
-    const char *sql = "SELECT * FROM records WHERE accountNbr = ? AND owner = ? ;";
+    int accountNbr;
+    printf("Enter the account number to view: ");
+    if (scanf("%d", &accountNbr) != 1)
+    {
+        printf("Invalid input.\n");
+        while (getchar() != '\n');
+        return;
+    }
+
+     // check account id
+    if (checkAccount(db, user, accountNbr) == 0)
+    {
+        printf("Account not found under your ownership.\n");
+        return;
+    }
+
+
+    const char *sql = "SELECT * FROM records WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("Failed to prepare select account statement\n");
+        printf("❌ Failed to prepare select account statement.\n");
         return;
     }
 
@@ -191,24 +227,47 @@ void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
 
     if (rc == SQLITE_ROW)
     {
-
         const unsigned char *name = sqlite3_column_text(stmt, 2);
         const unsigned char *country = sqlite3_column_text(stmt, 3);
         const unsigned char *phone = sqlite3_column_text(stmt, 4);
-        const unsigned char *accTyp = sqlite3_column_text(stmt, 5);
+        const unsigned char *accType = sqlite3_column_text(stmt, 5);
         int accNbr = sqlite3_column_int(stmt, 6);
-        double amount = sqlite3_column_int(stmt, 7);
-        printf("Account #[%d] %s, %s, %s, %s, %lf$\n", accNbr, name, country, phone, accTyp, amount);
-        // displayInterest((const char *)accType, balance, (const char *)depositDate);
+        double amount = sqlite3_column_double(stmt, 7);
+        const unsigned char *depositDate = sqlite3_column_text(stmt, 8);
+
+        printf("📄 Account #[%d]\n", accNbr);
+        printf("👤 Name: %s\n", name);
+        printf("🌍 Country: %s\n", country);
+        printf("📞 Phone: %s\n", phone);
+        printf("🏦 Type: %s\n", accType);
+        printf("💰 Balance: %.2lf$\n", amount);
+
+        // Handle interest info
+        if (strcmp((const char *)accType, "current") == 0)
+        {
+            printf("ℹ️  You will not get interests because the account is of type 'current'.\n");
+        }
+        else
+        {
+            double interest = calculateInterest((const char *)accType, amount);
+            int day = 1;
+
+            // Try to extract day from depositDate (assuming format dd/mm/yyyy)
+            if (depositDate && strlen((const char *)depositDate) >= 2)
+            {
+                sscanf((const char *)depositDate, "%2d", &day);
+            }
+
+            printf("💸 You will get $%.2lf as interest on day %d of every month.\n", interest, day);
+        }
     }
     else
     {
-        printf("No account found with that number under your ownership.\n");
+        printf("⚠️  No account found with that number under your ownership.\n");
     }
 
     sqlite3_finalize(stmt);
 }
-
 void recordMenu(sqlite3 *db, struct User *user)
 {
     system("clear");
@@ -400,7 +459,7 @@ void updateAccountInfo(sqlite3 *db, struct User *user)
     // check account id
     if (checkAccount(db, user, accId) == 0)
     {
-        printf("Account not found under your informations.\n");
+        printf("Account not found under your ownership.\n");
         return;
     }
 
@@ -444,7 +503,7 @@ void removeAccount(sqlite3 *db, struct User *user)
     // check account id
     if (checkAccount(db, user, accNbr) == 0)
     {
-        printf("Account not found under your informations.\n");
+        printf("Account not found under your ownership.\n");
         return;
     }
 
@@ -492,7 +551,7 @@ void transferOwnership(sqlite3 *db, struct User *user)
     // check account id
     if (checkAccount(db, user, accNbr) == 0)
     {
-        printf("Account not found under your informations.\n");
+        printf("Account not found under your ownership.\n");
         return;
     }
 

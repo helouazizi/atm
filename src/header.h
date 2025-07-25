@@ -47,7 +47,7 @@ int registerUser(sqlite3 *db, struct User *user);
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue);
 void recordMenu(sqlite3 *db, struct User *user);
 void updateAccountInfo(sqlite3 *db, struct User *u);
-void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr);
+void checkAccountDetails(sqlite3 *db, struct User *user);
 void listAccounts(sqlite3 *db, struct User *u);
 void makeTransaction(sqlite3 *db, struct User *u);
 void removeAccount(sqlite3 *db, struct User *u);
