@@ -442,7 +442,7 @@ void removeAccount(sqlite3 *db, struct User *user)
         return;
     }
 
-    const char *sql = "DELETE FROM records WHERE accountNbr = ? AND name = ?;";
+    const char *sql = "DELETE FROM records WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
