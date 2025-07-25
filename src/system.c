@@ -32,7 +32,7 @@ int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
 {
     // select the accnumber from db where the username  = user.usernme
     // open the db and check
-    const char *sql = "SELECT accountNbr FROM records WHERE owner = ? LIMIT 1";
+    const char *sql = "SELECT accountNbr FROM records WHERE owner = ? AND accountNbr = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -41,6 +41,7 @@ int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
         return 0;
     }
     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2,accountNbr);
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW)
     {
@@ -88,7 +89,7 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
     sqlite3_bind_int(stmt, 6, record->accountNbr);                      // accountNbr
     sqlite3_bind_double(stmt, 7, record->amount);                       // amount
     sqlite3_bind_text(stmt, 8, depositDate, -1, SQLITE_STATIC);         // deposit
-    sqlite3_bind_text(stmt, 9, withdrawDate, -1, SQLITE_STATIC);        // withdraw
+    sqlite3_bind_null(stmt, 9);                                         // withdraw
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -142,7 +143,7 @@ int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *ne
 // List all accounts of a user
 void listAccounts(sqlite3 *db, struct User *user)
 {
-    const char *sql = "SELECT * FROM records WHERE name = ?;";
+    const char *sql = "SELECT * FROM records WHERE owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -156,7 +157,6 @@ void listAccounts(sqlite3 *db, struct User *user)
     printf("Your accounts:\n");
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
     {
-        int accId = sqlite3_column_int(stmt, 0);
         const unsigned char *name = sqlite3_column_text(stmt, 2);
         const unsigned char *country = sqlite3_column_text(stmt, 3);
         const unsigned char *phone = sqlite3_column_text(stmt, 4);
@@ -166,7 +166,7 @@ void listAccounts(sqlite3 *db, struct User *user)
         const unsigned char *desposit = sqlite3_column_text(stmt, 8);
         const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
 
-        printf("Account #[%d] %s, %s, %s, %s, %d, %lf,%s,%s\n", accId, name, country, phone, accTyp, accNbr, amount, desposit, withdraw);
+        printf("Account #[%d] %s, %s, %s, %s, %lf$\n", accNbr, name, country, phone, accTyp, amount);
     }
 
     sqlite3_finalize(stmt);
@@ -175,7 +175,7 @@ void listAccounts(sqlite3 *db, struct User *user)
 // Check specific account details with interest info
 void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
 {
-    const char *sql = "SELECT * FROM records WHERE accountNbr = ? AND name = ? ;";
+    const char *sql = "SELECT * FROM records WHERE accountNbr = ? AND owner = ? ;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -191,17 +191,14 @@ void checkAccountDetails(sqlite3 *db, struct User *user, int accountNbr)
 
     if (rc == SQLITE_ROW)
     {
-        int accId = sqlite3_column_int(stmt, 0);
+
         const unsigned char *name = sqlite3_column_text(stmt, 2);
         const unsigned char *country = sqlite3_column_text(stmt, 3);
         const unsigned char *phone = sqlite3_column_text(stmt, 4);
         const unsigned char *accTyp = sqlite3_column_text(stmt, 5);
         int accNbr = sqlite3_column_int(stmt, 6);
         double amount = sqlite3_column_int(stmt, 7);
-        const unsigned char *desposit = sqlite3_column_text(stmt, 8);
-        const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
-
-        printf("Account #[%d] %s, %s, %s, %s, %d, %lf,%s,%s\n", accId, name, country, phone, accTyp, accNbr, amount, desposit, withdraw);
+        printf("Account #[%d] %s, %s, %s, %s, %lf$\n", accNbr, name, country, phone, accTyp, amount);
         // displayInterest((const char *)accType, balance, (const char *)depositDate);
     }
     else
@@ -527,8 +524,13 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (scanf("%d", &accNbr) != 1)
     {
         printf("Invalid input.\n");
-        while (getchar() != '\n')
-            ;
+        while (getchar() != '\n');
+        return;
+    }
+
+    if (checkAccount(db, user, accNbr) == 0)
+    {
+        printf("Account not found under your informations.\n");
         return;
     }
 
@@ -536,8 +538,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (scanf("%d", &choice) != 1 || (choice != 1 && choice != 2))
     {
         printf("Invalid choice.\n");
-        while (getchar() != '\n')
-            ;
+        while (getchar() != '\n');
         return;
     }
 
@@ -545,20 +546,19 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (scanf("%lf", &amount) != 1 || amount <= 0)
     {
         printf("Invalid amount.\n");
-        while (getchar() != '\n')
-            ;
+        while (getchar() != '\n');
         return;
     }
 
     const char *sql = (choice == 1)
-                          ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND name = ?;"
-                          : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND name = ? AND amount >= ?;";
+        ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND owner = ?;"
+        : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND owner = ? AND amount >= ?;";
 
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("Failed to prepare transaction statement.\n");
+        printf("❌ Failed to prepare transaction statement.\n");
         return;
     }
 
@@ -567,18 +567,26 @@ void makeTransaction(sqlite3 *db, struct User *user)
     sqlite3_bind_text(stmt, 3, user->username, -1, SQLITE_STATIC);
     if (choice == 2)
     {
-        sqlite3_bind_double(stmt, 4, amount);
+        sqlite3_bind_double(stmt, 4, amount); // for amount >= ?
     }
 
     rc = sqlite3_step(stmt);
+    int changes = sqlite3_changes(db);
     sqlite3_finalize(stmt);
 
-    if (rc == SQLITE_DONE)
+    if (rc == SQLITE_DONE && changes > 0)
     {
         printf("✅ Transaction successful.\n");
     }
     else
     {
-        printf("❌ Transaction failed.\n");
+        if (choice == 2)
+        {
+            printf("❌ Withdrawal failed: Insufficient funds.\n");
+        }
+        else
+        {
+            printf("❌ Transaction failed.\n");
+        }
     }
 }
