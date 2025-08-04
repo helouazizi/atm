@@ -194,35 +194,56 @@ void listAccounts(sqlite3 *db, struct User *user)
     const char *sql = "SELECT * FROM records WHERE owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    system("clear");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" YOUR ACCOUNTS ");
+    printSeparator('=');
+    printf(RESET);
+
     if (rc != SQLITE_OK)
     {
+        fprintf(stderr, RED "❌ Failed to prepare statement: %s\n" RESET, sqlite3_errmsg(db));
         return;
     }
 
     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
 
-    printf("Your accounts:\n");
+    int found = 0;
+
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
     {
+        found = 1;
         const unsigned char *name = sqlite3_column_text(stmt, 2);
         const unsigned char *country = sqlite3_column_text(stmt, 3);
         const unsigned char *phone = sqlite3_column_text(stmt, 4);
         const unsigned char *accTyp = sqlite3_column_text(stmt, 5);
         int accNbr = sqlite3_column_int(stmt, 6);
-        double amount = sqlite3_column_int(stmt, 7);
-        const unsigned char *desposit = sqlite3_column_text(stmt, 8);
+        double amount = sqlite3_column_double(stmt, 7);
+        const unsigned char *deposit = sqlite3_column_text(stmt, 8);
         const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
 
-        printf("📄 Account #[%d]\n", accNbr);
-        printf("👤 Name: %s\n", name);
-        printf("🌍 Country: %s\n", country);
-        printf("📞 Phone: %s\n", phone);
-        printf("🏦 Type: %s\n", accTyp);
-        printf("💰 Balance: %.2lf$\n", amount);
-        puts("================================");
+        printf("\n" BOLD GREEN "📄 Account #[%d]\n" RESET, accNbr);
+        printf("👤 " BOLD "Name:" RESET "     %s\n", name);
+        printf("🌍 " BOLD "Country:" RESET "  %s\n", country);
+        printf("📞 " BOLD "Phone:" RESET "    %s\n", phone);
+        printf("🏦 " BOLD "Type:" RESET "     %s\n", accTyp);
+        printf("💰 " BOLD "Balance:" RESET "  %.2lf $\n", amount);
+        printf("📥 " BOLD "Deposit Date:" RESET "  %s\n", deposit ? deposit : "N/A");
+        printf("📤 " BOLD "Withdraw Date:" RESET " %s\n", withdraw ? withdraw : "N/A");
+        printf( CYAN "----------------------------------------\n" RESET);
+    }
+
+    if (!found)
+    {
+        printf(YELLOW "⚠️  You have no accounts listed under your ownership.\n" RESET);
     }
 
     sqlite3_finalize(stmt);
+    printf("\n");
+    promptContinueOrExit(db,user);
+    return ;
 }
 
 void checkAccountDetails(sqlite3 *db, struct User *user)
