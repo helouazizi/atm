@@ -81,12 +81,12 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
 
     snprintf(depositDate, sizeof(depositDate), "%04d-%02d-%02d", record->deposit.year, record->deposit.month, record->deposit.day);
     snprintf(phoneStr, sizeof(phoneStr), "%d", record->phone);
-    
+
     sqlite3_bind_int(stmt, 1, user->id);                            // user_id
     sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);  // name
     sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC); // country
 
-    sqlite3_bind_text(stmt, 4, phoneStr, -1, SQLITE_TRANSIENT); // phone (as TEXT)
+    sqlite3_bind_text(stmt, 4, phoneStr, -1, SQLITE_STATIC); // phone (as TEXT)
 
     sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC); // accountType
     sqlite3_bind_int(stmt, 6, record->accountNbr);                      // accountNbr
