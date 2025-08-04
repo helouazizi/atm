@@ -228,36 +228,52 @@ void listAccounts(sqlite3 *db, struct User *user)
 void checkAccountDetails(sqlite3 *db, struct User *user)
 {
     int accountNbr;
-    printf("Enter the account number to view: ");
+    system("clear");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" ACCOUNT DETAILS ");
+    printSeparator('=');
+    printf(RESET);
+
+    printf("\nEnter the %saccount number%s to view: ", YELLOW, RESET);
     if (scanf("%d", &accountNbr) != 1)
     {
-        printf("Invalid account number.\n");
+        printf(RED "❌ Invalid input. Please enter a valid number.\n" RESET);
         while (getchar() != '\n')
             ;
+        sleep(2);
+        return;
+    }
+    while (getchar() != '\n')
+        ;
+
+    if (accountNbr < 1)
+    {
+        printf(RED "❌ Account number must be greater than zero.\n" RESET);
+        sleep(2);
         return;
     }
 
-    // Check ownership
     if (checkAccount(db, user, accountNbr) == 0)
     {
-        printf("Account not found under your ownership.\n");
+        printf(RED "❌ Account not found under your ownership.\n" RESET);
+        sleep(2);
         return;
     }
 
     const char *sql = "SELECT * FROM records WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK)
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        fprintf(stderr, "Failed to prepare statement.\n");
+        fprintf(stderr, RED "❌ Failed to prepare SQL statement.\n" RESET);
         return;
     }
 
     sqlite3_bind_int(stmt, 1, accountNbr);
     sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
 
-    rc = sqlite3_step(stmt);
-
+    int rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW)
     {
         const unsigned char *name = sqlite3_column_text(stmt, 2);
@@ -268,38 +284,36 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
         double amount = sqlite3_column_double(stmt, 7);
         const unsigned char *depositDate = sqlite3_column_text(stmt, 8);
 
-        printf("📄 Account #[%d]\n", accNbr);
-        printf("👤 Name: %s\n", name);
-        printf("🌍 Country: %s\n", country);
-        printf("📞 Phone: %s\n", phone);
-        printf("🏦 Type: %s\n", accType);
-        printf("💰 Balance: %.2lf$\n", amount);
+        printf(BOLD GREEN "\n📄 Account #[%d]\n" RESET, accNbr);
+        printf("👤 " BOLD "Name:" RESET "    %s\n", name);
+        printf("🌍 " BOLD "Country:" RESET " %s\n", country);
+        printf("📞 " BOLD "Phone:" RESET "   %s\n", phone);
+        printf("🏦 " BOLD "Type:" RESET "    %s\n", accType);
+        printf("💰 " BOLD "Balance:" RESET " %.2lf$\n", amount);
 
-        // Interest logic
         if (strcmp((const char *)accType, "current") == 0)
         {
-            printf("ℹ️  You will not get interests because the account is of type 'current'.\n");
+            printf(BOLD YELLOW "ℹ️  Note: No interest applied for 'current' account type.\n" RESET);
         }
         else
         {
             double interest = calculateInterest((const char *)accType, amount);
-
             int year, month, day = 1;
-            if (depositDate &&
-                sscanf((const char *)depositDate, "%d-%d-%d", &year, &month, &day) == 3)
+            if (depositDate && sscanf((const char *)depositDate, "%d-%d-%d", &year, &month, &day) == 3)
             {
-                // Parsed day from YYYY-MM-DD
+                printf(BOLD CYAN "💸 Interest: You’ll receive $%.2lf on day %d every month.\n" RESET, interest, day);
             }
-
-            printf("💸 You will get $%.2lf as interest on day %d of every month.\n", interest, day);
         }
     }
     else
     {
-        printf("⚠️  No account found with that number under your ownership.\n");
+        printf(RED "\n⚠️  No account found with that number under your ownership.\n" RESET);
     }
 
     sqlite3_finalize(stmt);
+    printf("\n");
+    promptContinueOrExit(db, user);
+    return;
 }
 
 void recordMenu(sqlite3 *db, struct User *user)
