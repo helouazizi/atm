@@ -32,7 +32,7 @@ void mainMenu(sqlite3 *db, struct User *u)
         if (scanf(" %d", &option) != 1)
         {
             while (getchar() != '\n')
-                ; 
+                ;
             printf(RED "❌ Invalid input! Please enter a number between 1 and 8.\n" RESET);
             sleep(1);
 
@@ -80,7 +80,6 @@ void mainMenu(sqlite3 *db, struct User *u)
             continue;
         }
 
-        promptContinueOrExit(db, u);
     }
 }
 
@@ -142,9 +141,12 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
         printf(BOLD "\nEnter %s1%s to return to the main menu or %s0%s to exit: " RESET, GREEN, RESET, RED, RESET);
         if (scanf(" %d", &choice) == 1 && (choice == 0 || choice == 1))
         {
+            while (getchar() != '\n')
+                ; // flush leftover newline
             if (choice == 1)
             {
-                return; // return control to mainMenu loop
+               
+                return; // return to main menu caller
             }
             else
             {
@@ -158,11 +160,12 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
             printf(RED "❌ Invalid option. Please enter 1 or 0.\n" RESET);
             attempts++;
             while (getchar() != '\n')
-                ; // clear input buffer
+                ;
         }
     }
 
     printf(RED "❌ Too many invalid attempts. Exiting...\n" RESET);
+    sleep(2);
     sqlite3_close(db);
     exit(1);
 }
