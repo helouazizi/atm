@@ -590,27 +590,88 @@ void updateAccountInfo(sqlite3 *db, struct User *user)
 void removeAccount(sqlite3 *db, struct User *user)
 {
     int accNbr;
-    printf("Enter account number to remove: ");
-    if (scanf("%d", &accNbr) != 1)
+    int attempts = 3;
+    char confirm;
+
+    system("clear");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" REMOVE AN ACCOUNT ");
+    printSeparator('=');
+    printf(RESET);
+
+    // Ask for account number with validation
+    while (attempts--)
     {
-        printf("Invalid input.\n");
-        while (getchar() != '\n')
-            ;
-        return;
+        printf(CYAN "\n\n [🔢] Enter account number to remove: " RESET);
+        if (scanf("%d", &accNbr) == 1)
+        {
+            while (getchar() != '\n')
+                ;
+            break;
+        }
+        else
+        {
+            printf(RED "❌ Invalid input. Please enter a valid number.\n" RESET);
+            while (getchar() != '\n')
+                ;
+        }
+
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
     }
-    // check account id
-    if (checkAccount(db, user, accNbr) == 0)
+
+    // Check account ownership
+    if (!checkAccount(db, user, accNbr))
     {
-        printf("Account not found under your ownership.\n");
+        printf(RED "\n❌ Account not found under your ownership.\n" RESET);
+        promptContinueOrExit(db,user);
         return;
     }
 
+    // Ask for confirmation (y/n)
+    attempts = 3;
+    while (attempts--)
+    {
+        printf(YELLOW "\n ⚠️  Are you sure you want to remove account #%d? [y/n]: " RESET, accNbr);
+        if (scanf(" %c", &confirm) == 1)
+        {
+            while (getchar() != '\n')
+                ; // flush buffer
+            confirm = tolower(confirm);
+            if (confirm == 'y' || confirm == 'n')
+                break;
+        }
+        printf(RED "❌ Invalid input. Please type 'y' or 'n'.\n" RESET);
+        while (getchar() != '\n')
+            ;
+
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid confirmation attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
+    }
+
+    if (confirm == 'n')
+    {
+        printf(YELLOW "\nℹ️  Account removal cancelled.\n" RESET);
+        promptContinueOrExit(db, user);
+        return;
+    }
+
+    // Prepare and execute delete query
     const char *sql = "DELETE FROM records WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("Failed to prepare delete statement.\n");
+        fprintf(stderr, RED "❌ Failed to prepare delete statement: %s\n" RESET, sqlite3_errmsg(db));
         return;
     }
 
@@ -622,12 +683,14 @@ void removeAccount(sqlite3 *db, struct User *user)
 
     if (rc == SQLITE_DONE)
     {
-        printf("✅ Account removed successfully.\n");
+        printf(GREEN "\n✅ Account #%d removed successfully.\n" RESET, accNbr);
     }
     else
     {
-        printf("❌ Failed to remove account.\n");
+        printf(RED "\n❌ Failed to remove account. Please try again later.\n" RESET);
     }
+
+    promptContinueOrExit(db, user);
 }
 
 void transferOwnership(sqlite3 *db, struct User *user)
