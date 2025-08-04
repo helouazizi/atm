@@ -1,0 +1,9 @@
+# Ignore all .db files (like SQLite databases)
+*.db
+
+# Optionally ignore backups or temporary SQLite files
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
