@@ -93,7 +93,7 @@ void initMenu(sqlite3 *db, struct User *u)
         printf(BOLD "Your choice: " RESET);
 
         if (scanf(" %d", &option) != 1) {
-            while (getchar() != '\n'); // clear input buffer
+            while (getchar() != '\n');
             printf(RED "❌ Invalid input! Please enter 1, 2, or 3.\n" RESET);
             sleep(1);
             continue;
@@ -107,7 +107,7 @@ void initMenu(sqlite3 *db, struct User *u)
                 {
                     printf(GREEN "\nLogged in successfully.\n" RESET);
                     sleep(1);
-                    return; // proceed to mainMenu
+                    return; 
                 }
                 else
                 {

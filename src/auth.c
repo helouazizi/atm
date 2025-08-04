@@ -26,13 +26,17 @@ void restoreEcho(const struct termios *oldFlags)
 void loginMenu(char username[50], char password[50])
 {
     struct termios oldFlags;
-
     system("clear");
-    printf("\n\n\n\t\t\t\tBank Management System");
-    printf("\n\t\t\t\tEnter Username: ");
-    scanf("%49s", username);
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" LOGIN ");
+    printSeparator('=');
+    printf(RESET);
 
-    printf("\n\t\t\t\tEnter Password: ");
+    printf(MAGENTA BOLD "\nEnter your credentials:\n\n" RESET);
+    printf("  %sUsername:%s", CYAN, RESET);
+    scanf("%49s", username);
+    printf("  %sPassword:%s", CYAN, RESET);
     disableEcho(&oldFlags);
     scanf("%49s", password);
     restoreEcho(&oldFlags);
@@ -65,9 +69,9 @@ int registerUser(sqlite3 *db, struct User *user)
     /* 2. Prepare the INSERT */
     const char *sql =
         "INSERT INTO users (username, password) VALUES (?, ?);";
-        /* If you’re on SQLite ≥ 3.35 you could do:
-           "INSERT INTO users (username, password) VALUES (?, ?)
-            RETURNING id;"  and read the id from sqlite3_column_… */
+    /* If you’re on SQLite ≥ 3.35 you could do:
+       "INSERT INTO users (username, password) VALUES (?, ?)
+        RETURNING id;"  and read the id from sqlite3_column_… */
     sqlite3_stmt *stmt;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
@@ -89,14 +93,13 @@ int registerUser(sqlite3 *db, struct User *user)
         /* sqlite3_last_insert_rowid returns a 64‑bit value.       */
         /* Cast only if you _know_ your ids fit into 32 bits.      */
         sqlite3_int64 newId = sqlite3_last_insert_rowid(db);
-        user->id = (int)newId;   /* or keep it as sqlite3_int64   */
+        user->id = (int)newId; /* or keep it as sqlite3_int64   */
     }
 
     /* 6. Clean up */
     sqlite3_finalize(stmt);
     return rc == SQLITE_DONE;
 }
-
 
 // Create a new user account (register flow)
 void createNewAcc(sqlite3 *db, struct User *user)
@@ -170,7 +173,7 @@ int authenticateUser(sqlite3 *db, struct User *user)
     {
         const unsigned char *dbPassword = sqlite3_column_text(stmt, 1);
         int id = sqlite3_column_int(stmt, 0);
-        
+
         if (strcmp((const char *)dbPassword, user->password) == 0)
         {
             authenticated = 1;
@@ -185,34 +188,3 @@ int authenticateUser(sqlite3 *db, struct User *user)
     sqlite3_finalize(stmt);
     return authenticated;
 }
-
-
-// Remove an account owned by the user
-// int removeAccount(sqlite3 *db, struct User *user, int accountNbr)
-// {
-//     const char *sql = "DELETE FROM records WHERE accountNbr = ? AND name = ?;";
-//     sqlite3_stmt *stmt;
-
-//     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-//     {
-//         fprintf(stderr, "Failed to prepare delete statement\n");
-//         return 0;
-//     }
-
-//     sqlite3_bind_int(stmt, 1, accountNbr);
-//     sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);
-
-//     int rc = sqlite3_step(stmt);
-//     sqlite3_finalize(stmt);
-
-//     if (rc == SQLITE_DONE)
-//     {
-//         printf("✔ Account #%d removed successfully.\n", accountNbr);
-//         return 1;
-//     }
-//     else
-//     {
-//         printf("❌ Failed to remove account.\n");
-//         return 0;
-//     }
-// }
