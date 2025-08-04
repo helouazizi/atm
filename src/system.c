@@ -12,21 +12,32 @@ struct Date get_currentDate()
     struct tm *local = localtime(&now);
     struct Date Today;
     Today.year = local->tm_year + 1900;
-    Today.month = local->tm_mon +1 ;
+    Today.month = local->tm_mon + 1;
     Today.day = local->tm_mday;
-    return Today
+    return Today;
 }
-// Helper function to calculate interest
 double calculateInterest(const char *type, double amount)
 {
     if (strcmp(type, "savings") == 0)
-        return amount * 0.07;
+    {
+        // Annual 7%, shown as monthly interest
+        return (amount * 0.07) / 12;
+    }
     else if (strcmp(type, "fixed01") == 0)
+    {
+        // Fixed 1-year interest: 4% for the whole year
         return amount * 0.04;
+    }
     else if (strcmp(type, "fixed02") == 0)
-        return amount * 0.05;
+    {
+        // Fixed 2-year interest: 5% for the whole 2 years
+        return amount * 0.05 * 2;
+    }
     else if (strcmp(type, "fixed03") == 0)
-        return amount * 0.08;
+    {
+        // Fixed 3-year interest: 8% for the whole 3 years
+        return amount * 0.08 * 3;
+    }
     return 0.0;
 }
 
@@ -190,13 +201,13 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
     printf("Enter the account number to view: ");
     if (scanf("%d", &accountNbr) != 1)
     {
-        printf("Invalid account number .\n");
+        printf("Invalid account number.\n");
         while (getchar() != '\n')
             ;
         return;
     }
 
-    // check account id
+    // Check ownership
     if (checkAccount(db, user, accountNbr) == 0)
     {
         printf("Account not found under your ownership.\n");
@@ -208,6 +219,7 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
+        fprintf(stderr, "Failed to prepare statement.\n");
         return;
     }
 
@@ -233,7 +245,7 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
         printf("🏦 Type: %s\n", accType);
         printf("💰 Balance: %.2lf$\n", amount);
 
-        // Handle interest info
+        // Interest logic
         if (strcmp((const char *)accType, "current") == 0)
         {
             printf("ℹ️  You will not get interests because the account is of type 'current'.\n");
@@ -241,12 +253,12 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
         else
         {
             double interest = calculateInterest((const char *)accType, amount);
-            int day = 1;
 
-            // Try to extract day from depositDate (assuming format dd/mm/yyyy)
-            if (depositDate && strlen((const char *)depositDate) >= 2)
+            int year, month, day = 1; 
+            if (depositDate &&
+                sscanf((const char *)depositDate, "%d-%d-%d", &year, &month, &day) == 3)
             {
-                sscanf((const char *)depositDate, "%2d", &day);
+                // Parsed day from YYYY-MM-DD
             }
 
             printf("💸 You will get $%.2lf as interest on day %d of every month.\n", interest, day);
