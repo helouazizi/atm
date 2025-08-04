@@ -56,7 +56,7 @@ int createTables(sqlite3 *db, char *schemaFile);
 void loginMenu(char a[50], char pass[50]);
 void createNewAcc(sqlite3 *db,struct User *user);
 int usernameExists(sqlite3 *db, const char *username);
-int authenticateUser(sqlite3 *db, struct User *user);
+int check_credentials(sqlite3 *db, struct User *user);
 int registerUser(sqlite3 *db, struct User *user);
 
 //=========================== system functions ==========================//

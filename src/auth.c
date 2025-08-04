@@ -153,14 +153,13 @@ void createNewAcc(sqlite3 *db, struct User *user)
 }
 
 // Authenticate user
-int authenticateUser(sqlite3 *db, struct User *user)
+int check_credentials(sqlite3 *db, struct User *user)
 {
     const char *sql = "SELECT id, password FROM users WHERE username = ?;";
     sqlite3_stmt *stmt;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
 
@@ -179,10 +178,6 @@ int authenticateUser(sqlite3 *db, struct User *user)
             authenticated = 1;
             user->id = id;
         }
-    }
-    else if (rc != SQLITE_DONE)
-    {
-        fprintf(stderr, "SQLite step error: %s\n", sqlite3_errmsg(db));
     }
 
     sqlite3_finalize(stmt);

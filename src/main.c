@@ -103,7 +103,7 @@ void initMenu(sqlite3 *db, struct User *u)
         {
             case 1:
                 loginMenu(u->username, u->password);
-                if (authenticateUser(db, u) != 0)
+                if (check_credentials(db, u) != 0)
                 {
                     printf(GREEN "\nLogged in successfully.\n" RESET);
                     sleep(1);
