@@ -168,20 +168,17 @@ int main()
     sqlite3 *db = openDatabase("./data/atm.db");
     if (!db)
     {
-        fprintf(stderr, RED "Failed to open database.\n" RESET);
         return 1;
     }
 
     if (!createTables(db, "./data/schema.sql"))
     {
-        fprintf(stderr, RED "Failed to create tables.\n" RESET);
         sqlite3_close(db);
         return 1;
     }
 
     struct User *user = malloc(sizeof(struct User));
     if (!user) {
-        fprintf(stderr, RED "Memory allocation failed.\n" RESET);
         sqlite3_close(db);
         return 1;
     }
