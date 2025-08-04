@@ -302,7 +302,6 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
     sqlite3_finalize(stmt);
 }
 
-
 void recordMenu(sqlite3 *db, struct User *user)
 {
     system("clear");
@@ -485,51 +484,72 @@ void updateAccountInfo(sqlite3 *db, struct User *user)
     char field[16];
     char newValue[64];
 
-    printf("Enter account number to update: ");
+    system("clear");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" UPDATE ACCOUNT INFO ");
+    printSeparator('=');
+    printf(RESET);
+
+    printf("\nEnter %saccount number%s to update: ", YELLOW, RESET);
     if (scanf("%d", &accId) != 1)
     {
-        printf("Invalid input.\n");
+        printf(RED "❌ Invalid input.\n" RESET);
         while (getchar() != '\n')
             ;
+        sleep(2);
         return;
     }
+
     while (getchar() != '\n')
-        ; // clear input
+        ; // clear input buffer
+
     if (accId < 1)
     {
-        printf("Invalid account number.\n");
+        printf(RED "❌ Invalid account number.\n" RESET);
+        sleep(2);
         return;
     }
-    // check account id
+
     if (checkAccount(db, user, accId) == 0)
     {
-        printf("Account not found under your ownership.\n");
+        printf(RED "❌ Account not found under your ownership.\n" RESET);
+        sleep(2);
         return;
     }
 
-    printf("Which field do you want to update? (phone/country): ");
+    printf("\nWhich field do you want to update? " BOLD "(phone/country): " RESET);
     fgets(field, sizeof(field), stdin);
-    field[strcspn(field, "\n")] = 0; // Remove newline
+    field[strcspn(field, "\n")] = 0;
 
-    // Extra validation (optional but helpful)
     if (strcmp(field, "phone") != 0 && strcmp(field, "country") != 0)
     {
-        printf("Invalid field. Only 'phone' or 'country' are allowed.\n");
+        printf(RED "❌ Invalid field. Only 'phone' or 'country' are allowed.\n" RESET);
+        sleep(2);
         return;
     }
 
-    printf("Enter new value: ");
+    printf("Enter new value for %s%s%s: ", CYAN, field, RESET);
     fgets(newValue, sizeof(newValue), stdin);
     newValue[strcspn(newValue, "\n")] = 0;
 
+    if (strlen(newValue) == 0)
+    {
+        printf(RED "❌ Value cannot be empty.\n" RESET);
+        sleep(2);
+        return;
+    }
+
     if (updateUserInfo(db, &accId, field, newValue))
     {
-        printf("✅ Account info updated successfully.\n");
+        printf(GREEN "\n✅ Account info updated successfully.\n" RESET);
     }
     else
     {
-        printf("❌ Failed to update account info.\n");
+        printf(RED "\n❌ Failed to update account info.\n" RESET);
     }
+
+    sleep(2);
 }
 
 void removeAccount(sqlite3 *db, struct User *user)
