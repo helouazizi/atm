@@ -515,7 +515,7 @@ void recordMenu(sqlite3 *db, struct User *user)
 
 void updateAccountInfo(sqlite3 *db, struct User *user)
 {
-    int accId;
+    int accId, attempts = 3;
     char field[16];
     char newValue[64];
 
@@ -526,53 +526,72 @@ void updateAccountInfo(sqlite3 *db, struct User *user)
     printSeparator('=');
     printf(RESET);
 
-    printf("\nEnter %saccount number%s to update: ", YELLOW, RESET);
-    if (scanf("%d", &accId) != 1)
+    while (attempts--)
     {
-        printf(RED "❌ Invalid input.\n" RESET);
-        while (getchar() != '\n')
-            ;
-        sleep(2);
+        printf("\nEnter %saccount number%s to update: ", YELLOW, RESET);
+        if (scanf("%d", &accId) == 1 && accId > 0)
+        {
+            while (getchar() != '\n')
+                ;
+            break;
+        }
+        else
+        {
+            printf(RED "❌ Invalid account number. Please enter a valid positive number.\n" RESET);
+            while (getchar() != '\n')
+                ;
+        }
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
+    }
+
+    if (!checkAccount(db, user, accId))
+    {
+        printf(RED "\n❌ Account not found under your ownership.\n" RESET);
+        promptContinueOrExit(db, user);
         return;
     }
 
-    while (getchar() != '\n')
-        ; // clear input buffer
-
-    if (accId < 1)
+    attempts = 3;
+    while (attempts--)
     {
-        printf(RED "❌ Invalid account number.\n" RESET);
-        sleep(2);
-        return;
+        printf("\nWhich field do you want to update? " BOLD "(phone/country): " RESET);
+        if (fgets(field, sizeof(field), stdin) != NULL)
+        {
+            field[strcspn(field, "\n")] = 0;
+            if (strcmp(field, "phone") == 0 || strcmp(field, "country") == 0)
+                break;
+        }
+        printf(RED "❌ Invalid input. Only 'phone' or 'country' are allowed.\n" RESET);
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
     }
 
-    if (checkAccount(db, user, accId) == 0)
+    attempts = 3;
+    while (attempts--)
     {
-        printf(RED "❌ Account not found under your ownership.\n" RESET);
-        sleep(2);
-        return;
-    }
-
-    printf("\nWhich field do you want to update? " BOLD "(phone/country): " RESET);
-    fgets(field, sizeof(field), stdin);
-    field[strcspn(field, "\n")] = 0;
-
-    if (strcmp(field, "phone") != 0 && strcmp(field, "country") != 0)
-    {
-        printf(RED "❌ Invalid field. Only 'phone' or 'country' are allowed.\n" RESET);
-        sleep(2);
-        return;
-    }
-
-    printf("Enter new value for %s%s%s: ", CYAN, field, RESET);
-    fgets(newValue, sizeof(newValue), stdin);
-    newValue[strcspn(newValue, "\n")] = 0;
-
-    if (strlen(newValue) == 0)
-    {
+        printf("Enter new value for %s%s%s: ", CYAN, field, RESET);
+        if (fgets(newValue, sizeof(newValue), stdin) != NULL)
+        {
+            newValue[strcspn(newValue, "\n")] = 0;
+            if (strlen(newValue) > 3)
+                break;
+        }
         printf(RED "❌ Value cannot be empty.\n" RESET);
-        sleep(2);
-        return;
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
     }
 
     if (updateUserInfo(db, &accId, field, newValue))
@@ -584,7 +603,8 @@ void updateAccountInfo(sqlite3 *db, struct User *user)
         printf(RED "\n❌ Failed to update account info.\n" RESET);
     }
 
-    sleep(2);
+    promptContinueOrExit(db, user);
+    return;
 }
 
 void removeAccount(sqlite3 *db, struct User *user)
@@ -707,14 +727,13 @@ void transferOwnership(sqlite3 *db, struct User *user)
     printSeparator('=');
     printf(RESET);
 
-   
     while (attempts--)
     {
         printf(CYAN "\n\n [🔢] Enter account number to transfer: " RESET);
         if (scanf("%d", &accNbr) == 1)
         {
             while (getchar() != '\n')
-                ; 
+                ;
             break;
         }
         else
@@ -745,7 +764,7 @@ void transferOwnership(sqlite3 *db, struct User *user)
         printf(CYAN " 👤 Enter new owner's username: " RESET);
         if (fgets(newOwner, sizeof(newOwner), stdin) != NULL)
         {
-            newOwner[strcspn(newOwner, "\n")] = 0; 
+            newOwner[strcspn(newOwner, "\n")] = 0;
             if (strlen(newOwner) > 0)
                 break;
         }
