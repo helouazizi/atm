@@ -99,15 +99,11 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
 
     if (rc != SQLITE_DONE)
     {
-        fprintf(stderr, "❌ Failed to insert record: %s\n", sqlite3_errmsg(db));
         return 0;
     }
-
-    printf("✅ Record successfully saved to database.\n");
     return 101;
 }
 
-// Update phone or country for user by acount id
 int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *newValue)
 {
     const char *sql = NULL;
@@ -130,7 +126,6 @@ int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *ne
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        fprintf(stderr, "❌ Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
 
@@ -143,7 +138,6 @@ int updateUserInfo(sqlite3 *db, const int *id, const char *field, const char *ne
     return rc == SQLITE_DONE;
 }
 
-// List all accounts of a user
 void listAccounts(sqlite3 *db, struct User *user)
 {
     const char *sql = "SELECT * FROM records WHERE owner = ?;";
@@ -151,7 +145,6 @@ void listAccounts(sqlite3 *db, struct User *user)
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("Failed to prepare select accounts statement\n");
         return;
     }
 
@@ -169,7 +162,6 @@ void listAccounts(sqlite3 *db, struct User *user)
         const unsigned char *desposit = sqlite3_column_text(stmt, 8);
         const unsigned char *withdraw = sqlite3_column_text(stmt, 9);
 
-        // printf("Account #[%d] %s, %s, %s, %s, %lf$\n", accNbr, name, country, phone, accTyp, amount);
         printf("📄 Account #[%d]\n", accNbr);
         printf("👤 Name: %s\n", name);
         printf("🌍 Country: %s\n", country);
@@ -182,14 +174,13 @@ void listAccounts(sqlite3 *db, struct User *user)
     sqlite3_finalize(stmt);
 }
 
-// Check specific account details with interest info
 void checkAccountDetails(sqlite3 *db, struct User *user)
 {
     int accountNbr;
     printf("Enter the account number to view: ");
     if (scanf("%d", &accountNbr) != 1)
     {
-        printf("Invalid input.\n");
+        printf("Invalid account number .\n");
         while (getchar() != '\n')
             ;
         return;
