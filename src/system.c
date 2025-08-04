@@ -629,7 +629,7 @@ void removeAccount(sqlite3 *db, struct User *user)
     if (!checkAccount(db, user, accNbr))
     {
         printf(RED "\n❌ Account not found under your ownership.\n" RESET);
-        promptContinueOrExit(db,user);
+        promptContinueOrExit(db, user);
         return;
     }
 
@@ -697,34 +697,103 @@ void transferOwnership(sqlite3 *db, struct User *user)
 {
     int accNbr;
     char newOwner[64];
-    printf("Enter account number to transfer: ");
-    if (scanf("%d", &accNbr) != 1)
+    char confirm;
+    int attempts = 3;
+
+    system("clear");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" TRANSFER OWNERSHIP ");
+    printSeparator('=');
+    printf(RESET);
+
+   
+    while (attempts--)
     {
-        printf("Invalid input.\n");
+        printf(CYAN "\n\n [🔢] Enter account number to transfer: " RESET);
+        if (scanf("%d", &accNbr) == 1)
+        {
+            while (getchar() != '\n')
+                ; 
+            break;
+        }
+        else
+        {
+            printf(RED "❌ Invalid input. Please enter a valid number.\n" RESET);
+            while (getchar() != '\n')
+                ;
+        }
+
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
+    }
+
+    if (!checkAccount(db, user, accNbr))
+    {
+        printf(RED "\n❌ Account not found under your ownership.\n" RESET);
+        promptContinueOrExit(db, user);
+        return;
+    }
+
+    attempts = 3;
+    while (attempts--)
+    {
+        printf(CYAN " 👤 Enter new owner's username: " RESET);
+        if (fgets(newOwner, sizeof(newOwner), stdin) != NULL)
+        {
+            newOwner[strcspn(newOwner, "\n")] = 0; 
+            if (strlen(newOwner) > 0)
+                break;
+        }
+        printf(RED "❌ Invalid username. Please try again.\n" RESET);
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
+    }
+
+    attempts = 3;
+    while (attempts--)
+    {
+        printf(YELLOW "⚠️  Confirm transfer to '%s'? [y/n]: " RESET, newOwner);
+        if (scanf(" %c", &confirm) == 1)
+        {
+            while (getchar() != '\n')
+                ;
+            confirm = tolower(confirm);
+            if (confirm == 'y' || confirm == 'n')
+                break;
+        }
+        printf(RED "❌ Invalid input. Please type 'y' or 'n'.\n" RESET);
         while (getchar() != '\n')
             ;
-        return;
-    }
-    while (getchar() != '\n')
-        ; // clear input
 
-    // check account id
-    if (checkAccount(db, user, accNbr) == 0)
+        if (attempts == 0)
+        {
+            printf(RED "\n❌ Too many invalid confirmation attempts.\n" RESET);
+            sleep(1);
+            exit(0);
+        }
+    }
+
+    if (confirm == 'n')
     {
-        printf("Account not found under your ownership.\n");
+        printf(YELLOW "\nℹ️  Ownership transfer cancelled.\n" RESET);
+        promptContinueOrExit(db, user);
         return;
     }
-
-    printf("Enter new owner's username: ");
-    fgets(newOwner, sizeof(newOwner), stdin);
-    newOwner[strcspn(newOwner, "\n")] = 0;
 
     const char *sql = "UPDATE records SET owner = ? WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("Failed to prepare transfer statement.\n");
         return;
     }
 
@@ -737,12 +806,15 @@ void transferOwnership(sqlite3 *db, struct User *user)
 
     if (rc == SQLITE_DONE)
     {
-        printf("✅ Ownership transferred successfully.\n");
+        printf(GREEN "\n✅ Ownership transferred to '%s' successfully.\n" RESET, newOwner);
     }
     else
     {
-        printf("❌ Failed to transfer ownership.\n");
+        printf(RED "\n❌ Failed to transfer ownership.\n" RESET);
     }
+
+    promptContinueOrExit(db, user);
+    return;
 }
 
 void makeTransaction(sqlite3 *db, struct User *user)
