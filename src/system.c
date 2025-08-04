@@ -16,6 +16,9 @@ struct Date get_currentDate()
     Today.day = local->tm_mday;
     return Today;
 }
+
+
+
 double calculateInterest(const char *type, double amount)
 {
     if (strcmp(type, "saving") == 0)
@@ -468,7 +471,6 @@ void recordMenu(sqlite3 *db, struct User *user)
     promptContinueOrExit(db, user);
 }
 
-// Update account information (phone or country)
 void updateAccountInfo(sqlite3 *db, struct User *user)
 {
     int accId;
@@ -522,7 +524,6 @@ void updateAccountInfo(sqlite3 *db, struct User *user)
     }
 }
 
-// Remove an account by account number
 void removeAccount(sqlite3 *db, struct User *user)
 {
     int accNbr;
@@ -566,7 +567,6 @@ void removeAccount(sqlite3 *db, struct User *user)
     }
 }
 
-// Transfer ownership of an account
 void transferOwnership(sqlite3 *db, struct User *user)
 {
     int accNbr;
@@ -619,7 +619,6 @@ void transferOwnership(sqlite3 *db, struct User *user)
     }
 }
 
-// Make a transaction (deposit or withdraw)
 void makeTransaction(sqlite3 *db, struct User *user)
 {
     int accNbr;
