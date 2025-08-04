@@ -198,7 +198,6 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("❌ Failed to prepare select account statement.\n");
         return;
     }
 
