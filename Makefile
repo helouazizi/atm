@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -I./src
 SRC_DIR = src
 OBJ_DIR = obj
 
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/system.c $(SRC_DIR)/auth.c $(SRC_DIR)/db.c
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/system.c $(SRC_DIR)/auth.c $(SRC_DIR)/db.c $(SRC_DIR)/ui.c
 OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
 all: atm
