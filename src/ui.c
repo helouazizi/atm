@@ -3,9 +3,6 @@
 #include "header.h"
 
 
-
-
-
 int getTerminalWidth()
 {
     struct winsize w;

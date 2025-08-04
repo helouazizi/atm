@@ -105,7 +105,7 @@ void initMenu(sqlite3 *db, struct User *u)
                 loginMenu(u->username, u->password);
                 if (authenticateUser(db, u) != 0)
                 {
-                    printf(GREEN "\nPassword Match! Logged in successfully.\n" RESET);
+                    printf(GREEN "\nLogged in successfully.\n" RESET);
                     sleep(1);
                     return; // proceed to mainMenu
                 }
