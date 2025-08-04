@@ -27,8 +27,6 @@ static int accountNumberExists(sqlite3 *db, int accountNbr)
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        // /* Preparation failed – be conservative and pretend it exists */
-        // fprintf(stderr, "SQLite error: %s\n", sqlite3_errmsg(db));
         return 1;
     }
 
@@ -41,16 +39,14 @@ static int accountNumberExists(sqlite3 *db, int accountNbr)
     return exists;
 }
 
-// lets create a function that check if the acount is under the  current user is exist should accept db and user and accnumber
 int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
 {
-    
+
     const char *sql = "SELECT accountNbr FROM records WHERE owner = ? AND accountNbr = ?;";
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
         return 0;
     }
     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
@@ -68,7 +64,6 @@ int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
     return 0;
 }
 
-// Create new record for a user
 int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
 {
     const char *sql = "INSERT INTO records (user_id, owner, country, phone, accountType, accountNbr, amount, deposit, withdraw) "
@@ -78,24 +73,19 @@ int createNewRecord(sqlite3 *db, struct User *user, struct Record *record)
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        fprintf(stderr, "❌ Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
 
     char depositDate[11];
-    char withdrawDate[11];
+    char phoneStr[20];
 
-    snprintf(depositDate, sizeof(depositDate), "%04d-%02d-%02d",
-             record->deposit.year, record->deposit.month, record->deposit.day);
-    snprintf(withdrawDate, sizeof(withdrawDate), "%04d-%02d-%02d",
-             record->withdraw.year, record->withdraw.month, record->withdraw.day);
-
+    snprintf(depositDate, sizeof(depositDate), "%04d-%02d-%02d", record->deposit.year, record->deposit.month, record->deposit.day);
+    snprintf(phoneStr, sizeof(phoneStr), "%d", record->phone);
+    
     sqlite3_bind_int(stmt, 1, user->id);                            // user_id
     sqlite3_bind_text(stmt, 2, user->username, -1, SQLITE_STATIC);  // name
     sqlite3_bind_text(stmt, 3, record->country, -1, SQLITE_STATIC); // country
 
-    char phoneStr[20];
-    snprintf(phoneStr, sizeof(phoneStr), "%d", record->phone);
     sqlite3_bind_text(stmt, 4, phoneStr, -1, SQLITE_TRANSIENT); // phone (as TEXT)
 
     sqlite3_bind_text(stmt, 5, record->accountType, -1, SQLITE_STATIC); // accountType
@@ -200,17 +190,17 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
     if (scanf("%d", &accountNbr) != 1)
     {
         printf("Invalid input.\n");
-        while (getchar() != '\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
 
-     // check account id
+    // check account id
     if (checkAccount(db, user, accountNbr) == 0)
     {
         printf("Account not found under your ownership.\n");
         return;
     }
-
 
     const char *sql = "SELECT * FROM records WHERE accountNbr = ? AND owner = ?;";
     sqlite3_stmt *stmt;
