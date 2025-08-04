@@ -18,7 +18,7 @@ struct Date get_currentDate()
 }
 double calculateInterest(const char *type, double amount)
 {
-    if (strcmp(type, "savings") == 0)
+    if (strcmp(type, "saving") == 0)
     {
         // Annual 7%, shown as monthly interest
         return (amount * 0.07) / 12;
@@ -81,6 +81,35 @@ int checkAccount(sqlite3 *db, struct User *user, int accountNbr)
             return 1;
         }
     }
+    sqlite3_finalize(stmt);
+    return 0;
+}
+
+int checkAccountType(sqlite3 *db, struct User *user, int accountNbr)
+{
+    const char *sql = "SELECT accountType FROM records WHERE owner = ? AND accountNbr = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        return 0;
+    }
+
+    sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, accountNbr);
+
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW)
+    {
+        const unsigned char *acctype = sqlite3_column_text(stmt, 0);
+        if (acctype &&
+            (strcmp((const char *)acctype, "saving") == 0 || strcmp((const char *)acctype, "current") == 0))
+        {
+            sqlite3_finalize(stmt);
+            return 1;
+        }
+    }
+
     sqlite3_finalize(stmt);
     return 0;
 }
@@ -254,7 +283,7 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
         {
             double interest = calculateInterest((const char *)accType, amount);
 
-            int year, month, day = 1; 
+            int year, month, day = 1;
             if (depositDate &&
                 sscanf((const char *)depositDate, "%d-%d-%d", &year, &month, &day) == 3)
             {
@@ -358,10 +387,10 @@ void recordMenu(sqlite3 *db, struct User *user)
     attempts = 0;
     while (attempts < MAX_ATTEMPTS)
     {
-        printf("Enter account type (savings/current/fixed01/fixed02/fixed03): ");
+        printf("Enter account type (saving/current/fixed01/fixed02/fixed03): ");
         scanf("%s", r->accountType);
         if (
-            strcmp(r->accountType, "savings") == 0 ||
+            strcmp(r->accountType, "saving") == 0 ||
             strcmp(r->accountType, "current") == 0 ||
             strcmp(r->accountType, "fixed01") == 0 ||
             strcmp(r->accountType, "fixed02") == 0 ||
@@ -609,6 +638,12 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (checkAccount(db, user, accNbr) == 0)
     {
         printf("Account not found under your informations.\n");
+        return;
+    }
+
+    if (checkAccountType(db, user, accNbr) == 0)
+    {
+        printf("You cant withdraw or deposit for fixed accounts.\n");
         return;
     }
 
