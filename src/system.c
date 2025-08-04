@@ -232,7 +232,7 @@ void listAccounts(sqlite3 *db, struct User *user)
         printf("💰 " BOLD "Balance:" RESET "  %.2lf $\n", amount);
         printf("📥 " BOLD "Deposit Date:" RESET "  %s\n", deposit ? deposit : "N/A");
         printf("📤 " BOLD "Withdraw Date:" RESET " %s\n", withdraw ? withdraw : "N/A");
-        printf( CYAN "----------------------------------------\n" RESET);
+        printf(CYAN "----------------------------------------\n" RESET);
     }
 
     if (!found)
@@ -242,8 +242,8 @@ void listAccounts(sqlite3 *db, struct User *user)
 
     sqlite3_finalize(stmt);
     printf("\n");
-    promptContinueOrExit(db,user);
-    return ;
+    promptContinueOrExit(db, user);
+    return;
 }
 
 void checkAccountDetails(sqlite3 *db, struct User *user)
@@ -684,49 +684,85 @@ void transferOwnership(sqlite3 *db, struct User *user)
 
 void makeTransaction(sqlite3 *db, struct User *user)
 {
-    int accNbr;
-    double amount;
-    int choice;
+    int accNbr = -1, choice = -1;
+    double amount = -1;
+    int attempts = 3;
 
-    printf("Enter account number: ");
-    if (scanf("%d", &accNbr) != 1)
+    system("clear");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" MAKE A TRANSACTION ");
+    printSeparator('=');
+    printf(RESET);
+
+    // === Attempt to get valid account number ===
+    while (attempts--)
     {
-        printf("Invalid input.\n");
+        printf(CYAN "\n\n [🔢] Enter account number: " RESET);
+        if (scanf("%d", &accNbr) == 1)
+        {
+            while (getchar() != '\n')
+                ; // clear input buffer
+            break;
+        }
+        printf(RED "❌ Invalid account number input. Try again.\n" RESET);
         while (getchar() != '\n')
             ;
+        if (attempts == 0)
+            return;
+    }
+
+    // === Verify ownership ===
+    if (!checkAccount(db, user, accNbr))
+    {
+        printf(RED "❌ Account not found under your ownership.\n" RESET);
         return;
     }
 
-    if (checkAccount(db, user, accNbr) == 0)
+    // === Check account type (must not be 'fixed') ===
+    if (!checkAccountType(db, user, accNbr))
     {
-        printf("Account not found under your informations.\n");
+        printf(YELLOW "⚠️  Transactions are not allowed for 'fixed' accounts.\n" RESET);
         return;
     }
 
-    if (checkAccountType(db, user, accNbr) == 0)
+    // === Attempt to get valid transaction type ===
+    attempts = 3;
+    while (attempts--)
     {
-        printf("You cant withdraw or deposit for fixed accounts.\n");
-        return;
-    }
-
-    printf("Enter 1 to deposit, 2 to withdraw: ");
-    if (scanf("%d", &choice) != 1 || (choice != 1 && choice != 2))
-    {
-        printf("Invalid choice.\n");
+        printf(CYAN " [💳]Enter %s1%s to deposit, %s2%s to withdraw: " RESET, GREEN, CYAN, GREEN, CYAN);
+        if (scanf("%d", &choice) == 1 && (choice == 1 || choice == 2))
+        {
+            while (getchar() != '\n')
+                ;
+            break;
+        }
+        printf(RED "❌ Invalid transaction type. Try again.\n" RESET);
         while (getchar() != '\n')
             ;
-        return;
+        if (attempts == 0)
+            return;
     }
 
-    printf("Enter amount: ");
-    if (scanf("%lf", &amount) != 1 || amount <= 0)
+    // === Attempt to get valid amount ===
+    attempts = 3;
+    while (attempts--)
     {
-        printf("Invalid amount.\n");
+        printf(CYAN " 💵 Enter amount: " RESET);
+        if (scanf("%lf", &amount) == 1 && amount > 0)
+        {
+            while (getchar() != '\n')
+                ;
+            break;
+        }
+        printf(RED "❌ Invalid amount. Must be greater than 0. Try again.\n" RESET);
         while (getchar() != '\n')
             ;
-        return;
+        if (attempts == 0)
+            return;
     }
 
+    // === SQL query selection ===
     const char *sql = (choice == 1)
                           ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND owner = ?;"
                           : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND owner = ? AND amount >= ?;";
@@ -735,35 +771,35 @@ void makeTransaction(sqlite3 *db, struct User *user)
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
-        printf("❌ Failed to prepare transaction statement.\n");
         return;
     }
 
+    // === Bind values ===
     sqlite3_bind_double(stmt, 1, amount);
     sqlite3_bind_int(stmt, 2, accNbr);
     sqlite3_bind_text(stmt, 3, user->username, -1, SQLITE_STATIC);
     if (choice == 2)
-    {
-        sqlite3_bind_double(stmt, 4, amount); // for amount >= ?
-    }
+        sqlite3_bind_double(stmt, 4, amount);
 
+    // === Execute and finalize ===
     rc = sqlite3_step(stmt);
     int changes = sqlite3_changes(db);
     sqlite3_finalize(stmt);
 
+    // === Report result ===
     if (rc == SQLITE_DONE && changes > 0)
     {
-        printf("✅ Transaction successful.\n");
+        printf(GREEN "✅ %s successful! Amount: $%.2lf\n" RESET,
+               (choice == 1) ? "Deposit" : "Withdrawal", amount);
     }
     else
     {
         if (choice == 2)
-        {
-            printf("❌ Withdrawal failed: Insufficient funds.\n");
-        }
+            printf(RED "❌ Withdrawal failed: Insufficient funds \n" RESET);
         else
-        {
-            printf("❌ Transaction failed.\n");
-        }
+            printf(RED "❌ Deposit failed.\n" RESET);
     }
+
+    promptContinueOrExit(db, user);
+    return;
 }
