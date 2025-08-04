@@ -32,7 +32,7 @@ void mainMenu(sqlite3 *db, struct User *u)
         if (scanf(" %d", &option) != 1)
         {
             while (getchar() != '\n')
-                ; // clear input buffer
+                ; 
             printf(RED "❌ Invalid input! Please enter a number between 1 and 8.\n" RESET);
             sleep(1);
 
