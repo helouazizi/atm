@@ -52,7 +52,7 @@ void mainMenu(sqlite3 *db, struct User *u)
         promptContinueOrExit(db, u);
         break;
     case 8:
-        sqlite3_close(db); // Close DB before exit
+        sqlite3_close(db); 
         exit(0);
         break;
     default:
@@ -86,7 +86,7 @@ void initMenu(sqlite3 *db, struct User *u)
             }
             else
             {
-                printf("\nWrong password!\n");
+                printf("\nInvalid Credentials!\n");
                 exit(1);
             }
 
@@ -97,7 +97,7 @@ void initMenu(sqlite3 *db, struct User *u)
             r = 1;
             break;
         case 3:
-            sqlite3_close(db); // Close DB before exit
+            sqlite3_close(db); 
             exit(0);
             break;
         default:
@@ -129,10 +129,10 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
         }
         else
         {
-            printf("❌ Invalid input. Please enter 1 or 0.\n");
+            printf("❌ Invalid option. Please enter 1 or 0.\n");
             attempts++;
             while (getchar() != '\n')
-                ; // clear input buffer
+                ; 
         }
     }
 
@@ -145,18 +145,14 @@ int main()
     sqlite3 *db = openDatabase("./data/atm.db");
     if (!db)
     {
-        printf("Failed to to open  db.\n");
-        return 1; // error opening DB
+        return 1;
     }
 
     if (!createTables(db, "./data/schema.sql"))
     {
-        printf("Failed to create tables.\n");
         sqlite3_close(db);
         return 1;
     }
-
-    printf("Tables created successfully.\n");
 
     struct User *user = malloc(sizeof(struct User));
 
