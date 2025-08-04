@@ -3,9 +3,19 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <time.h>
 #define MAX_ATTEMPTS 3
 
+struct Date get_currentDate()
+{
+    time_t now = time(NULL);
+    struct tm *local = localtime(&now);
+    struct Date Today;
+    Today.year = local->tm_year + 1900;
+    Today.month = local->tm_mon +1 ;
+    Today.day = local->tm_mday;
+    return Today
+}
 // Helper function to calculate interest
 double calculateInterest(const char *type, double amount)
 {
@@ -249,6 +259,7 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
 
     sqlite3_finalize(stmt);
 }
+
 void recordMenu(sqlite3 *db, struct User *user)
 {
     system("clear");
@@ -258,7 +269,6 @@ void recordMenu(sqlite3 *db, struct User *user)
     struct Record *r = malloc(sizeof(struct Record));
     if (!r)
     {
-        printf("Memory allocation failed.\n");
         return;
     }
 
@@ -269,7 +279,9 @@ void recordMenu(sqlite3 *db, struct User *user)
     int attempts = 0;
     while (attempts < MAX_ATTEMPTS)
     {
+        struct Date today = get_currentDate();
         printf("\nEnter date (MM DD YYYY): ");
+
         if (scanf("%d %d %d", &r->deposit.month, &r->deposit.day, &r->deposit.year) == 3 &&
             r->deposit.month >= 1 && r->deposit.month <= 12 &&
             r->deposit.day >= 1 && r->deposit.day <= 31 &&
