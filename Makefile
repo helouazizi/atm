@@ -18,7 +18,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(SRC_DIR)/header.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJ_DIR) atm
+	rm -rf $(OBJ_DIR) atm data/atm.db
 
 run: atm
 	./atm
