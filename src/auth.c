@@ -102,57 +102,96 @@ int registerUser(sqlite3 *db, struct User *user)
 }
 
 // Create a new user account (register flow)
-void createNewAcc(sqlite3 *db, struct User *user)
+void register_user(sqlite3 *db, struct User *user)
 {
     system("clear");
-    printf("\n\n\n\t\t\t\tBank Management System");
-    printf("\n\t\t\t\t\t Register\n");
+    printf(BOLD CYAN);
+    printSeparator('=');
+    printCentered(" REGISTER ");
+    printSeparator('=');
+    printf(RESET);
 
-    while (1)
+    printf(MAGENTA BOLD "\nEnter your credentials:\n\n" RESET);
+
+    int attempts = 0;
+    while (attempts < 3)
     {
-        printf("\n\t\t\t\tEnter a Username: ");
+        printf("  %sUsername:%s ", CYAN, RESET);
         scanf("%49s", user->username);
+        while (getchar() != '\n' && getchar() != EOF)
+            ;
+
         if (strlen(user->username) < 3 || strlen(user->username) > 15)
         {
-            printf("\n❌ Please enter a valid username {3 -> 15} characters\n");
+            printf(RED BOLD "\n❌ Invalid username! " RESET);
+            printf(RED "Username must be between 3 and 15 characters.\n\n" RESET);
+            attempts++;
             continue;
         }
 
-        if (!usernameExists(db, user->username))
-            break;
+        if (usernameExists(db, user->username))
+        {
+            printf(RED BOLD "\n❌ Username already exists! " RESET);
+            printf(RED "Please try a different one.\n\n" RESET);
+            attempts++;
+            continue;
+        }
 
-        printf("\n❌ Username already exists. Try again.\n");
+        break; // Valid username
+    }
+
+    if (attempts == 3)
+    {
+        printf(RED BOLD "\n❌ Too many invalid attempts. Exiting...\n\n" RESET);
+        sleep(2);
+        exit(0);
     }
 
     struct termios oldFlags;
     disableEcho(&oldFlags);
-    while (1)
+
+    attempts = 0;
+    while (attempts < 3)
     {
-        printf("\n\t\t\t\tEnter a Password: ");
+        printf("  %sPassword:%s ", CYAN, RESET);
         scanf("%49s", user->password);
+        while (getchar() != '\n' && getchar() != EOF)
+            ;
+
         if (strlen(user->password) < 8 || strlen(user->password) > 15)
         {
-            printf("\n❌ Please enter a valid password {8 -> 15} characters\n");
+            printf(RED BOLD "\n❌ Invalid password! " RESET);
+            printf(RED "Password must be between 8 and 15 characters.\n\n" RESET);
+            attempts++;
             continue;
         }
-        else
-        {
-            break;
-        }
+
+        break; // Valid password
     }
 
     restoreEcho(&oldFlags);
+
+    if (attempts == 3)
+    {
+        printf(RED BOLD "\n❌ Too many invalid  attempts. Exiting...\n\n" RESET);
+        sleep(2);
+        exit(0);
+    }
+
     if (registerUser(db, user))
     {
-        printf("\n✔ Successfully created your acount\n");
+
+        printf(GREEN BOLD "\n✅ Successfully created your account!\n\n" RESET);
+        sleep(2);
     }
     else
     {
-        printf("\n❌ Failed to create your acount.\n");
+        printf(RED BOLD "\n❌ Failed to create your account. Please try again later.\n\n" RESET);
+        sleep(2);
+        exit(0);
     }
 }
 
-// Authenticate user
 int check_credentials(sqlite3 *db, struct User *user)
 {
     const char *sql = "SELECT id, password FROM users WHERE username = ?;";

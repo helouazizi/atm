@@ -116,7 +116,7 @@ void initMenu(sqlite3 *db, struct User *u)
                     continue;
                 }
             case 2:
-                createNewAcc(db, u);
+                register_user(db, u);
                 return;
             case 3:
                 sqlite3_close(db);
