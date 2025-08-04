@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #define MAX_ATTEMPTS 3
+
 // Helper function to calculate interest
 double calculateInterest(const char *type, double amount)
 {
@@ -18,7 +19,7 @@ double calculateInterest(const char *type, double amount)
         return amount * 0.08;
     return 0.0;
 }
-/* Return 1 if accountNbr is found in the records table, 0 otherwise */
+
 static int accountNumberExists(sqlite3 *db, int accountNbr)
 {
     const char *sql = "SELECT 1 FROM records WHERE accountNbr = ? LIMIT 1;";
@@ -26,8 +27,8 @@ static int accountNumberExists(sqlite3 *db, int accountNbr)
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        /* Preparation failed – be conservative and pretend it exists */
-        fprintf(stderr, "SQLite error: %s\n", sqlite3_errmsg(db));
+        // /* Preparation failed – be conservative and pretend it exists */
+        // fprintf(stderr, "SQLite error: %s\n", sqlite3_errmsg(db));
         return 1;
     }
 

@@ -14,6 +14,7 @@ atm: $(OBJECTS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(SRC_DIR)/header.h
 	@mkdir -p $(OBJ_DIR)
+	@echo "Compiling $<..."
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
@@ -21,3 +22,5 @@ clean:
 
 run: atm
 	./atm
+
+.PHONY: all clean run
