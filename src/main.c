@@ -102,19 +102,8 @@ void initMenu(sqlite3 *db, struct User *u)
         switch (option)
         {
             case 1:
-                loginMenu(u->username, u->password);
-                if (check_credentials(db, u) != 0)
-                {
-                    printf(GREEN "\nLogged in successfully.\n" RESET);
-                    sleep(1);
-                    return; 
-                }
-                else
-                {
-                    printf(RED "\nInvalid Credentials! Try again.\n" RESET);
-                    sleep(2);
-                    continue;
-                }
+                login(db , u);
+                return;
             case 2:
                 register_user(db, u);
                 return;

@@ -23,9 +23,11 @@ void restoreEcho(const struct termios *oldFlags)
 }
 
 // Show login prompt and collect credentials
-void loginMenu(char username[50], char password[50])
+void login(sqlite3 *db, struct User *user)
 {
     struct termios oldFlags;
+    int attempts = 0;
+
     system("clear");
     printf(BOLD CYAN);
     printSeparator('=');
@@ -34,12 +36,38 @@ void loginMenu(char username[50], char password[50])
     printf(RESET);
 
     printf(MAGENTA BOLD "\nEnter your credentials:\n\n" RESET);
-    printf("  %sUsername:%s", CYAN, RESET);
-    scanf("%49s", username);
-    printf("  %sPassword:%s", CYAN, RESET);
-    disableEcho(&oldFlags);
-    scanf("%49s", password);
-    restoreEcho(&oldFlags);
+    while (attempts < 3)
+    {
+
+        printf("  %sUsername:%s ", CYAN, RESET);
+        scanf("%49s", user->username);
+        while (getchar() != '\n' && getchar() != EOF)
+            ; // clear input buffer
+
+        disableEcho(&oldFlags);
+        printf("  %sPassword:%s ", CYAN, RESET);
+        scanf("%49s", user->password);
+        while (getchar() != '\n' && getchar() != EOF)
+            ;
+        restoreEcho(&oldFlags);
+
+        if (check_credentials(db, user) != 0)
+        {
+            printf(GREEN "\n✅ Logged in successfully.\n\n" RESET);
+            sleep(1);
+            return;
+        }
+        else
+        {
+            printf(RED "\n❌ Invalid credentials! Try again.\n\n" RESET);
+            attempts++;
+        }
+    }
+
+    // If we get here, attempts exceeded
+    printf(RED BOLD "\n❌ Too many failed login attempts. Exiting.\n\n" RESET);
+    sleep(2);
+    exit(0);
 }
 
 // Check if username already exists
