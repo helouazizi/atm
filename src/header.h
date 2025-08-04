@@ -1,8 +1,10 @@
 #ifndef HEADER_H
 #define HEADER_H
 
+
 #include <stdio.h>
 #include<sqlite3.h> 
+
 
 // Structs
 struct Date {
