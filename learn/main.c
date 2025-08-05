@@ -1,3 +1,4 @@
+// learn/main.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,14 +11,29 @@
 
 #define SHM_NAME "/atm_notify"
 #define MAX_MSG 256
+#define MAX_USERS 10
 
 typedef struct
 {
     pthread_mutex_t mutex;
     char message[MAX_MSG];
     int updated;
-    pid_t sender_pid; // Track which process sent the notification
+    Sender *sender;
+    Reciver *reciver;
 } SharedData;
+
+typedef struct
+{
+    pid_t sender_pid;
+    char username[50];
+
+} Sender;
+typedef struct
+{
+    pid_t reciver_pid;
+    char username[50];
+
+} Reciver;
 
 SharedData *shared;
 
@@ -28,7 +44,8 @@ void *listen_for_notifications(void *arg)
     while (1)
     {
         pthread_mutex_lock(&shared->mutex);
-        if (shared->updated && shared->sender_pid != my_pid)
+        if (shared->updated && shared->reciver->reciver_pid == my_pid)
+
         {
             printf("\n🔔 Notification: %s\n", shared->message);
             shared->updated = 0;

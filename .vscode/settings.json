@@ -4,6 +4,7 @@
     "*.json": "jsonc",
     "*.html": "html",
     "header.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "fcntl.h": "c"
   }
 }
