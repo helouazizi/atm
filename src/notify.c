@@ -12,6 +12,19 @@
 
 void save_user_pid(struct User *user, SharedData *SharedDataa)
 {
+    // Check if user with the same username already exists
+    for (int i = 0; i < SharedDataa->user_count; i++)
+    {
+        if (strcmp(SharedDataa->users[i].username, user->username) == 0)
+        {
+            // Overwrite the existing user's pid
+            SharedDataa->users[i].pid = getpid();
+            printf("Updated user '%s' with new PID %d\n", user->username, SharedDataa->users[i].pid);
+            return;
+        }
+    }
+
+    // If user not found, add a new user
     if (SharedDataa->user_count >= MAX_USERS)
     {
         printf("Cannot add more users. Limit reached.\n");
@@ -56,4 +69,9 @@ SharedData *init_shared_memory(void)
     }
 
     return shared;
+}
+
+void cleanup_shared_memory()
+{
+    shm_unlink(SHM_NAME);
 }

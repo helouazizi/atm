@@ -48,6 +48,7 @@ typedef struct SharedData
     pid_t target_pid;
 } SharedData;
 extern SharedData *SharedDataa;
+
 // ========================== ui functions ================================//
 // ANSI color codes
 #define RESET "\033[0m"
@@ -89,5 +90,7 @@ void transferOwnership(sqlite3 *db, struct User *u);
 //=========================== notify  functions ==========================//
 void save_user_pid(struct User *user, SharedData *SharedDataa);
 SharedData *init_shared_memory(void);
+
+void cleanup_shared_memory();
 
 #endif

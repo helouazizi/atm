@@ -10,7 +10,7 @@ void printUsers(SharedData *SharedDataa)
     for (int i = 0; i < SharedDataa->user_count; i++)
     {
         printf("User %d:\n", i + 1);
-        printf("  PID: %d\n", SharedDataa->users[i].id);
+        printf("  PID: %d\n", SharedDataa->users[i].pid);
         printf("  Name: %s\n", SharedDataa->users[i].username);
     }
 }
@@ -218,6 +218,7 @@ int main()
 
     sqlite3_close(db);
     free(user);
+    cleanup_shared_memory();
 
     return 0;
 }
