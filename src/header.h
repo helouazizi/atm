@@ -38,7 +38,7 @@ struct User
     pid_t pid;
 };
 
-typedef struct
+typedef struct SharedData
 {
     pthread_mutex_t mutex;
     char message[MAX_MSG];
@@ -47,7 +47,7 @@ typedef struct
     int user_count;
     pid_t target_pid;
 } SharedData;
-
+extern SharedData *SharedDataa;
 // ========================== ui functions ================================//
 // ANSI color codes
 #define RESET "\033[0m"
@@ -70,8 +70,8 @@ sqlite3 *openDatabase(const char *filename);
 int createTables(sqlite3 *db, char *schemaFile);
 
 //=========================== Authentication functions ==========================//
-void login(sqlite3 *db, struct User *user);
-void register_user(sqlite3 *db, struct User *user);
+void login(sqlite3 *db, struct User *user, SharedData *SharedDataa);
+void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa);
 int usernameExists(sqlite3 *db, const char *username);
 int check_credentials(sqlite3 *db, struct User *user);
 int registerUser(sqlite3 *db, struct User *user);
@@ -85,5 +85,8 @@ void listAccounts(sqlite3 *db, struct User *u);
 void makeTransaction(sqlite3 *db, struct User *u);
 void removeAccount(sqlite3 *db, struct User *u);
 void transferOwnership(sqlite3 *db, struct User *u);
+
+//=========================== notify  functions ==========================//
+void save_user_pid(struct User *user, SharedData *SharedDataa);
 
 #endif
