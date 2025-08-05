@@ -30,6 +30,7 @@ void mainMenu(sqlite3 *db, struct User *u, SharedData *SharedDataa)
         printCentered("ATM MAIN MENU");
         printSeparator('=');
         printf(RESET);
+        printUsers(SharedDataa);
 
         printf(MAGENTA BOLD "\nChoose an option:\n\n" RESET);
         printf("  %s[1]%s - Create a new account\n", CYAN, RESET);
@@ -204,9 +205,13 @@ int main()
         return 1;
     }
     memset(user, 0, sizeof(struct User));
-    SharedData *SharedDataa = NULL;
-    SharedDataa = malloc(sizeof(SharedData));
-    SharedDataa->user_count = 0;
+    SharedData *SharedDataa = init_shared_memory();
+    if (!SharedDataa)
+    {
+        sqlite3_close(db);
+        free(user);
+        return 1;
+    }
 
     initMenu(db, user, SharedDataa);
     mainMenu(db, user, SharedDataa);

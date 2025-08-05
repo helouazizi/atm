@@ -88,5 +88,6 @@ void transferOwnership(sqlite3 *db, struct User *u);
 
 //=========================== notify  functions ==========================//
 void save_user_pid(struct User *user, SharedData *SharedDataa);
+SharedData *init_shared_memory(void);
 
 #endif
