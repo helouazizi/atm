@@ -1,5 +1,9 @@
 {
-    "files.associations": {
-        "header.h": "c"
-    }
+  "files.associations": {
+    "*.js": "javascript",
+    "*.json": "jsonc",
+    "*.html": "html",
+    "header.h": "c",
+    "stdio.h": "c"
+  }
 }
