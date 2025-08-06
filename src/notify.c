@@ -31,7 +31,8 @@ void save_user_pid(struct User *user, SharedData *SharedDataa)
         return;
     }
 
-    SharedDataa->users[SharedDataa->user_count].pid = getpid();
+    pid_t pid = getpid();
+    SharedDataa->users[SharedDataa->user_count].pid = pid;
     strcpy(SharedDataa->users[SharedDataa->user_count].username, user->username);
     SharedDataa->user_count++;
 }
@@ -74,4 +75,22 @@ SharedData *init_shared_memory(void)
 void cleanup_shared_memory()
 {
     shm_unlink(SHM_NAME);
+}
+void *listen_for_notifications(void *arg)
+{
+    SharedData *SharedDataa = (SharedData *)arg;
+    pid_t my_pid = getpid();
+
+    while (1)
+    {
+        pthread_mutex_lock(&SharedDataa->mutex);
+        if (SharedDataa->updated && SharedDataa->target_pid == my_pid)
+        {
+            printf("\n🔔 Notification: %s\n", SharedDataa->message);
+            SharedDataa->updated = 0;
+        }
+        pthread_mutex_unlock(&SharedDataa->mutex);
+        usleep(500000); // 0.5s delay
+    }
+    return NULL;
 }

@@ -74,7 +74,7 @@ void mainMenu(sqlite3 *db, struct User *u, SharedData *SharedDataa)
             removeAccount(db, u);
             break;
         case 7:
-            transferOwnership(db, u);
+            transferOwnership(db, u, SharedDataa);
             break;
         case 8:
             sqlite3_close(db);
@@ -212,6 +212,15 @@ int main()
         free(user);
         return 1;
     }
+
+    pthread_t notify_thread;
+
+    if (pthread_create(&notify_thread, NULL, listen_for_notifications, (void *)SharedDataa) != 0)
+    {
+        perror("Failed to create notification thread");
+        return EXIT_FAILURE;
+    }
+    // pthread_join(notify_thread, NULL);
 
     initMenu(db, user, SharedDataa);
     mainMenu(db, user, SharedDataa);

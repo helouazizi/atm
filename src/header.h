@@ -85,12 +85,12 @@ void checkAccountDetails(sqlite3 *db, struct User *user);
 void listAccounts(sqlite3 *db, struct User *u);
 void makeTransaction(sqlite3 *db, struct User *u);
 void removeAccount(sqlite3 *db, struct User *u);
-void transferOwnership(sqlite3 *db, struct User *u);
+void transferOwnership(sqlite3 *db, struct User *user, SharedData *SharedDataa);
 
-//=========================== notify  functions ==========================//
-void save_user_pid(struct User *user, SharedData *SharedDataa);
+    //=========================== notify  functions ==========================//
+    void save_user_pid(struct User *user, SharedData *SharedDataa);
 SharedData *init_shared_memory(void);
 
 void cleanup_shared_memory();
-
+void *listen_for_notifications(void *arg);
 #endif

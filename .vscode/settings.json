@@ -5,6 +5,7 @@
     "*.html": "html",
     "header.h": "c",
     "stdio.h": "c",
-    "fcntl.h": "c"
+    "fcntl.h": "c",
+    "sqlite3.h": "c"
   }
 }
