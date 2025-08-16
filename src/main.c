@@ -5,15 +5,7 @@
 #include <sqlite3.h>
 #include "header.h"
 
-void printUsers(SharedData *SharedDataa)
-{
-    for (int i = 0; i < SharedDataa->user_count; i++)
-    {
-        printf("User %d:\n", i + 1);
-        printf("  PID: %d\n", SharedDataa->users[i].pid);
-        printf("  Name: %s\n", SharedDataa->users[i].username);
-    }
-}
+
 void mainMenu(sqlite3 *db, struct User *u, SharedData *SharedDataa)
 {
 
@@ -30,7 +22,6 @@ void mainMenu(sqlite3 *db, struct User *u, SharedData *SharedDataa)
         printCentered("ATM MAIN MENU");
         printSeparator('=');
         printf(RESET);
-        printUsers(SharedDataa);
 
         printf(MAGENTA BOLD "\nChoose an option:\n\n" RESET);
         printf("  %s[1]%s - Create a new account\n", CYAN, RESET);
