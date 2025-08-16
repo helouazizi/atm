@@ -72,7 +72,6 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 ---
 
 ### 🧪 Additional Features 
-- 🔐 **Password Encryption**
 - 🖼️ **Terminal UI Enhancements**
 - 🧰 **Makefile** support for build automation
 - 🗃️ **SQLite Database Integration** (instead of plain text files)

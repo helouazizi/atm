@@ -205,6 +205,7 @@ int main()
         return 1;
     }
     memset(user, 0, sizeof(struct User));
+
     SharedData *SharedDataa = init_shared_memory();
     if (!SharedDataa)
     {
@@ -220,7 +221,6 @@ int main()
         perror("Failed to create notification thread");
         return EXIT_FAILURE;
     }
-    // pthread_join(notify_thread, NULL);
 
     initMenu(db, user, SharedDataa);
     mainMenu(db, user, SharedDataa);
