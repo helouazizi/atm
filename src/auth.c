@@ -6,7 +6,6 @@
 #include <sqlite3.h>
 #include "header.h"
 
-// Disable terminal echo (for password input)
 void disableEcho(struct termios *oldFlags)
 {
     struct termios newFlags;
@@ -17,14 +16,12 @@ void disableEcho(struct termios *oldFlags)
     tcsetattr(fileno(stdin), TCSANOW, &newFlags);
 }
 
-// Restore terminal settings
 void restoreEcho(const struct termios *oldFlags)
 {
     tcsetattr(fileno(stdin), TCSANOW, oldFlags);
 }
 
-// Show login prompt and collect credentials
-void login(sqlite3 *db, struct User *user, SharedData *SharedDataa)
+void login(sqlite3 *db, struct User *user)
 {
     struct termios oldFlags;
     int attempts = 0;
@@ -43,7 +40,7 @@ void login(sqlite3 *db, struct User *user, SharedData *SharedDataa)
         printf("  %sUsername:%s ", CYAN, RESET);
         scanf("%49s", user->username);
         while (getchar() != '\n' && getchar() != EOF)
-            ; // clear input buffer
+            ;
 
         disableEcho(&oldFlags);
         printf("  %sPassword:%s ", CYAN, RESET);
@@ -56,8 +53,6 @@ void login(sqlite3 *db, struct User *user, SharedData *SharedDataa)
         {
             printf(GREEN "\n✅ Logged in successfully.\n\n" RESET);
             sleep(1);
-            // save it pid
-            save_user_pid(user, SharedDataa);
             return;
         }
         else
@@ -67,42 +62,34 @@ void login(sqlite3 *db, struct User *user, SharedData *SharedDataa)
         }
     }
 
-    // If we get here, attempts exceeded
     printf(RED BOLD "\n❌ Too many failed login attempts. Exiting.\n\n" RESET);
     sleep(2);
     exit(0);
 }
 
-// Check if username already exists
 int usernameExists(sqlite3 *db, const char *username)
 {
     const char *sql = "SELECT 1 FROM users WHERE username = ?;";
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-        return 1; // assume exists to prevent duplicate
 
-    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
     int exists = (sqlite3_step(stmt) == SQLITE_ROW);
     sqlite3_finalize(stmt);
     return exists;
 }
 
-// Register a new user
 int registerUser(sqlite3 *db, struct User *user)
 {
-    /* 1. Reject duplicate usernames */
     if (usernameExists(db, user->username))
     {
         printf("Username '%s' already exists. Choose another.\n", user->username);
         return 0;
     }
 
-    /* 2. Prepare the INSERT */
     const char *sql =
         "INSERT INTO users (username, password) VALUES (?, ?);";
-    /* If you’re on SQLite ≥ 3.35 you could do:
-       "INSERT INTO users (username, password) VALUES (?, ?)
-        RETURNING id;"  and read the id from sqlite3_column_… */
+
     sqlite3_stmt *stmt;
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
@@ -111,29 +98,23 @@ int registerUser(sqlite3 *db, struct User *user)
         return 0;
     }
 
-    /* 3. Bind parameters */
     sqlite3_bind_text(stmt, 1, user->username, -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_TRANSIENT);
 
-    /* 4. Execute */
     int rc = sqlite3_step(stmt);
 
-    /* 5. If it worked, grab the auto‑generated rowid */
     if (rc == SQLITE_DONE)
     {
-        /* sqlite3_last_insert_rowid returns a 64‑bit value.       */
-        /* Cast only if you _know_ your ids fit into 32 bits.      */
+
         sqlite3_int64 newId = sqlite3_last_insert_rowid(db);
-        user->id = (int)newId; /* or keep it as sqlite3_int64   */
+        user->id = (int)newId;
     }
 
-    /* 6. Clean up */
     sqlite3_finalize(stmt);
     return rc == SQLITE_DONE;
 }
 
-// Create a new user account (register flow)
-void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa)
+void register_user(sqlite3 *db, struct User *user)
 {
     system("clear");
     printf(BOLD CYAN);
@@ -168,7 +149,7 @@ void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa)
             continue;
         }
 
-        break; // Valid username
+        break; 
     }
 
     if (attempts == 3)
@@ -197,7 +178,7 @@ void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa)
             continue;
         }
 
-        break; // Valid password
+        break; 
     }
 
     restoreEcho(&oldFlags);
@@ -214,7 +195,6 @@ void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa)
 
         printf(GREEN BOLD "\n✅ Successfully created your account!\n\n" RESET);
         sleep(2);
-        save_user_pid(user, SharedDataa);
     }
     else
     {

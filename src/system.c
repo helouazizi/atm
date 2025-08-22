@@ -737,7 +737,7 @@ void removeAccount(sqlite3 *db, struct User *user)
     promptContinueOrExit(db, user);
 }
 
-void transferOwnership(sqlite3 *db, struct User *user, SharedData *SharedDataa)
+void transferOwnership(sqlite3 *db, struct User *user)
 {
     int accNbr;
     char newOwner[64];
@@ -850,29 +850,6 @@ void transferOwnership(sqlite3 *db, struct User *user, SharedData *SharedDataa)
     if (rc == SQLITE_DONE)
     {
         printf(GREEN "\n✅ Ownership transferred to '%s' successfully.\n" RESET, newOwner);
-        // 🔔 Notify the new owner
-        pthread_mutex_lock(&SharedDataa->mutex);
-
-        int found = 0;
-        for (int i = 0; i < SharedDataa->user_count; i++)
-        {
-            if (strcmp(SharedDataa->users[i].username, newOwner) == 0)
-            {
-                SharedDataa->target_pid = SharedDataa->users[i].pid;
-                snprintf(SharedDataa->message, MAX_MSG,
-                         "📢 You are now the owner of account #%d", accNbr);
-                SharedDataa->updated = 1;
-                found = 1;
-                break;
-            }
-        }
-
-        pthread_mutex_unlock(&SharedDataa->mutex);
-
-        if (!found)
-        {
-            printf(YELLOW "⚠️  New owner '%s' is not active (no PID found to notify).\n" RESET, newOwner);
-        }
     }
     else
     {

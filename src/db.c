@@ -7,7 +7,7 @@
 
 char *read_file(const char *path, size_t *out_size)
 {
-    FILE *fp = fopen(path, "rb"); /* always binary */
+    FILE *fp = fopen(path, "rb"); 
     if (!fp)
     {
         perror("fopen");
@@ -56,7 +56,6 @@ char *read_file(const char *path, size_t *out_size)
     return buf;
 }
 
-// Open DB connection
 sqlite3 *openDatabase(const char *filename)
 {
     sqlite3 *db;
@@ -91,5 +90,5 @@ int createTables(sqlite3 *db, char *schemaFile)
         return rc;
     }
 
-    return 1; // Success
+    return 1; 
 }
