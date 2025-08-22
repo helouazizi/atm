@@ -1,11 +1,16 @@
+// src/main.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
 #include "header.h"
 
-void mainMenu(sqlite3 *db, struct User *u)
+
+void mainMenu(sqlite3 *db, struct User *u, SharedData *SharedDataa)
 {
+
+    // lets print users
+
     int option;
 
     int attemps = 0;
@@ -60,7 +65,7 @@ void mainMenu(sqlite3 *db, struct User *u)
             removeAccount(db, u);
             break;
         case 7:
-            transferOwnership(db, u);
+            transferOwnership(db, u, SharedDataa);
             break;
         case 8:
             sqlite3_close(db);
@@ -79,11 +84,10 @@ void mainMenu(sqlite3 *db, struct User *u)
             attemps++;
             continue;
         }
-
     }
 }
 
-void initMenu(sqlite3 *db, struct User *u)
+void initMenu(sqlite3 *db, struct User *u, SharedData *SharedDataa)
 {
     int option;
 
@@ -115,10 +119,10 @@ void initMenu(sqlite3 *db, struct User *u)
         switch (option)
         {
         case 1:
-            login(db, u);
+            login(db, u, SharedDataa);
             return;
         case 2:
-            register_user(db, u);
+            register_user(db, u, SharedDataa);
             return;
         case 3:
             sqlite3_close(db);
@@ -145,7 +149,7 @@ void promptContinueOrExit(sqlite3 *db, struct User *usr)
                 ; // flush leftover newline
             if (choice == 1)
             {
-               
+
                 return; // return to main menu caller
             }
             else
@@ -185,6 +189,7 @@ int main()
     }
 
     struct User *user = malloc(sizeof(struct User));
+
     if (!user)
     {
         sqlite3_close(db);
@@ -192,11 +197,28 @@ int main()
     }
     memset(user, 0, sizeof(struct User));
 
-    initMenu(db, user);
-    mainMenu(db, user);
+    SharedData *SharedDataa = init_shared_memory();
+    if (!SharedDataa)
+    {
+        sqlite3_close(db);
+        free(user);
+        return 1;
+    }
+
+    pthread_t notify_thread;
+
+    if (pthread_create(&notify_thread, NULL, listen_for_notifications, (void *)SharedDataa) != 0)
+    {
+        perror("Failed to create notification thread");
+        return EXIT_FAILURE;
+    }
+
+    initMenu(db, user, SharedDataa);
+    mainMenu(db, user, SharedDataa);
 
     sqlite3_close(db);
     free(user);
+    cleanup_shared_memory();
 
     return 0;
 }

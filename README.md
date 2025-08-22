@@ -1,4 +1,5 @@
-# 🏦 Terminal-Based ATM Management System
+<!-- README.md -->
+# 🏦 ATM Management System
 
 A C-based **ATM Simulation System** designed to manage user accounts with operations like registration, login, transactions, ownership transfers, interest calculations, and more. This project uses **SQLite** for data persistence and provides a clean Terminal UI experience with robust input validation.
 
@@ -7,20 +8,12 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 ## 🚀 Features
 
 ### 1. 👤 User Registration
-- Users can **register** with a unique username and password.
-- **Username must be unique** – duplicate usernames are rejected.
-- Passwords are stored **(optionally encrypted)**.
-- User data is stored securely in a database file.
+- Users can **register**  or **login**
+
 
 ---
 
-### 2. 🔐 User Authentication
-- Login system with **3 attempts** allowed.
-- Credentials are checked against a persistent **SQLite database**.
-
----
-
-### 3. 📝 Update Account Information
+### 2. 📝 Update Account Information
 - Users can update:
   - **Country**
   - **Phone Number**
@@ -32,7 +25,7 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 
 ---
 
-### 4. 📋 View Account Details
+### 3. 📋 View Account Details
 - Users can **view individual account** information by inputting the account ID.
 - Account types and interest rules:
   - `savings` → 💰 7% interest
@@ -45,7 +38,7 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 
 ---
 
-### 5. 💳 Transactions (Deposit & Withdraw)
+### 4. 💳 Transactions (Deposit & Withdraw)
 - Only allowed for:
   - `savings`
   - `current`
@@ -56,14 +49,14 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 
 ---
 
-### 6. ❌ Remove Account
+### 5. ❌ Remove Account
 - Users can remove an account **they own**.
 - Requires confirmation: `Are you sure? (y/n)`
 - Validates ownership and existence before deletion.
 
 ---
 
-### 7. 🔄 Transfer Ownership
+### 6. 🔄 Transfer Ownership
 - Allows users to transfer an account to **another existing user**.
 - Requires:
   - Account ID
@@ -78,12 +71,12 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 
 ---
 
-### 🧪 Additional Features (Bonus)
-- 🔐 **Password Encryption**
+### 🧪 Additional Features 
 - 🖼️ **Terminal UI Enhancements**
 - 🧰 **Makefile** support for build automation
 - 🗃️ **SQLite Database Integration** (instead of plain text files)
 - 🧼 Proper **input validation**, **error handling**, and **memory management**
+- 🧼 Proper **Pipes and child processes**
 
 ---
 

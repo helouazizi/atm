@@ -1,17 +1,23 @@
+// src/header.h
 #ifndef HEADER_H
 #define HEADER_H
 
-
 #include <stdio.h>
-#include<sqlite3.h> 
+#include <sqlite3.h>
+#include <sys/types.h>
+#include <pthread.h>
 
-
+#define SHM_NAME "/atm_notify"
+#define MAX_MSG 256
+#define MAX_USERS 10
 // Structs
-struct Date {
+struct Date
+{
     int month, day, year;
 };
 
-struct Record {
+struct Record
+{
     int id;
     int userId;
     char name[100];
@@ -24,12 +30,24 @@ struct Record {
     struct Date withdraw;
 };
 
-struct User {
+struct User
+{
     int id;
     char username[50];
     char password[50];
+    pid_t pid;
 };
 
+typedef struct SharedData
+{
+    pthread_mutex_t mutex;
+    char message[MAX_MSG];
+    int updated;
+    struct User users[MAX_USERS];
+    int user_count;
+    pid_t target_pid;
+} SharedData;
+extern SharedData *SharedDataa;
 
 // ========================== ui functions ================================//
 // ANSI color codes
@@ -53,8 +71,8 @@ sqlite3 *openDatabase(const char *filename);
 int createTables(sqlite3 *db, char *schemaFile);
 
 //=========================== Authentication functions ==========================//
-void login(sqlite3 *db, struct User *user);
-void register_user(sqlite3 *db,struct User *user);
+void login(sqlite3 *db, struct User *user, SharedData *SharedDataa);
+void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa);
 int usernameExists(sqlite3 *db, const char *username);
 int check_credentials(sqlite3 *db, struct User *user);
 int registerUser(sqlite3 *db, struct User *user);
@@ -67,7 +85,12 @@ void checkAccountDetails(sqlite3 *db, struct User *user);
 void listAccounts(sqlite3 *db, struct User *u);
 void makeTransaction(sqlite3 *db, struct User *u);
 void removeAccount(sqlite3 *db, struct User *u);
-void transferOwnership(sqlite3 *db, struct User *u);
+void transferOwnership(sqlite3 *db, struct User *user, SharedData *SharedDataa);
 
+    //=========================== notify  functions ==========================//
+    void save_user_pid(struct User *user, SharedData *SharedDataa);
+SharedData *init_shared_memory(void);
 
+void cleanup_shared_memory();
+void *listen_for_notifications(void *arg);
 #endif

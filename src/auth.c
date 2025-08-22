@@ -1,3 +1,4 @@
+// src/auth.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +24,7 @@ void restoreEcho(const struct termios *oldFlags)
 }
 
 // Show login prompt and collect credentials
-void login(sqlite3 *db, struct User *user)
+void login(sqlite3 *db, struct User *user, SharedData *SharedDataa)
 {
     struct termios oldFlags;
     int attempts = 0;
@@ -55,6 +56,8 @@ void login(sqlite3 *db, struct User *user)
         {
             printf(GREEN "\n✅ Logged in successfully.\n\n" RESET);
             sleep(1);
+            // save it pid
+            save_user_pid(user, SharedDataa);
             return;
         }
         else
@@ -130,7 +133,7 @@ int registerUser(sqlite3 *db, struct User *user)
 }
 
 // Create a new user account (register flow)
-void register_user(sqlite3 *db, struct User *user)
+void register_user(sqlite3 *db, struct User *user, SharedData *SharedDataa)
 {
     system("clear");
     printf(BOLD CYAN);
@@ -211,6 +214,7 @@ void register_user(sqlite3 *db, struct User *user)
 
         printf(GREEN BOLD "\n✅ Successfully created your account!\n\n" RESET);
         sleep(2);
+        save_user_pid(user, SharedDataa);
     }
     else
     {
