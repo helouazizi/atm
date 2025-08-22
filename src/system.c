@@ -56,7 +56,7 @@ static int accountNumberExists(sqlite3 *db, int accountNbr)
     sqlite3_bind_int(stmt, 1, accountNbr);
 
     int rc = sqlite3_step(stmt);
-    int exists = (rc == SQLITE_ROW); /* got at least one row → it exists */
+    int exists = (rc == SQLITE_ROW); 
 
     sqlite3_finalize(stmt);
     return exists;
@@ -347,7 +347,6 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
             }
             else
             {
-                // fallback if depositDate is missing or invalid
                 printf("💸 Interest: You will get $%.2lf at the end of the %d-year period.\n",
                        interest, duration);
             }
@@ -399,8 +398,7 @@ void recordMenu(sqlite3 *db, struct User *user)
         {
             printf(RED "❌ Invalid date. Try again.\n" RESET);
             attempts++;
-            while (getchar() != '\n')
-                ; // clear input
+            while (getchar() != '\n'); 
         }
         if (attempts == MAX_ATTEMPTS)
         {
@@ -409,7 +407,7 @@ void recordMenu(sqlite3 *db, struct User *user)
             exit(0);
         }
     }
-    getchar(); // clear newline
+    getchar(); 
 
     // Country
     attempts = 0;
@@ -647,7 +645,6 @@ void removeAccount(sqlite3 *db, struct User *user)
     printSeparator('=');
     printf(RESET);
 
-    // Ask for account number with validation
     while (attempts--)
     {
         printf(CYAN "\n\n [🔢] Enter account number to remove: " RESET);
@@ -899,14 +896,13 @@ void makeTransaction(sqlite3 *db, struct User *user)
     printSeparator('=');
     printf(RESET);
 
-    // === Attempt to get valid account number ===
     while (attempts--)
     {
         printf(CYAN "\n\n [🔢] Enter account number: " RESET);
         if (scanf("%d", &accNbr) == 1)
         {
             while (getchar() != '\n')
-                ; // clear input buffer
+                ; 
             break;
         }
         printf(RED "❌ Invalid account number input. Try again.\n" RESET);
@@ -917,7 +913,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
             return;
     }
 
-    // === Verify ownership ===
+ 
     if (!checkAccount(db, user, accNbr))
     {
         printf(RED "❌ Account not found under your ownership.\n" RESET);
@@ -925,7 +921,6 @@ void makeTransaction(sqlite3 *db, struct User *user)
         return;
     }
 
-    // === Check account type (must not be 'fixed') ===
     if (!checkAccountType(db, user, accNbr))
     {
         printf(YELLOW "⚠️  Transactions are not allowed for 'fixed' accounts.\n" RESET);
@@ -933,7 +928,6 @@ void makeTransaction(sqlite3 *db, struct User *user)
         return;
     }
 
-    // === Attempt to get valid transaction type ===
     attempts = 3;
     while (attempts--)
     {
@@ -952,7 +946,6 @@ void makeTransaction(sqlite3 *db, struct User *user)
             return;
     }
 
-    // === Attempt to get valid amount ===
     attempts = 3;
     while (attempts--)
     {
@@ -971,7 +964,6 @@ void makeTransaction(sqlite3 *db, struct User *user)
             return;
     }
 
-    // === SQL query selection ===
     const char *sql = (choice == 1)
                           ? "UPDATE records SET amount = amount + ? WHERE accountNbr = ? AND owner = ?;"
                           : "UPDATE records SET amount = amount - ? WHERE accountNbr = ? AND owner = ? AND amount >= ?;";
@@ -993,7 +985,6 @@ void makeTransaction(sqlite3 *db, struct User *user)
     int changes = sqlite3_changes(db);
     sqlite3_finalize(stmt);
 
-    // === Report result ===
     if (rc == SQLITE_DONE && changes > 0)
     {
         printf(GREEN "✅ %s successful! Amount: $%.2lf\n" RESET,
