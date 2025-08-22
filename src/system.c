@@ -312,17 +312,43 @@ void checkAccountDetails(sqlite3 *db, struct User *user)
         printf("🏦 " BOLD "Type:" RESET "    %s\n", accType);
         printf("💰 " BOLD "Balance:" RESET " %.2lf$\n", amount);
 
-        if (strcmp((const char *)accType, "current") == 0)
+        if (strcmp(accType, "current") == 0)
         {
-            printf(BOLD YELLOW "ℹ️  Note: No interest applied for 'current' account type.\n" RESET);
+            printf("ℹ️  Note: No interest applied for 'current' account type.\n");
         }
-        else
+        else if (strcmp(accType, "saving") == 0)
         {
-            double interest = calculateInterest((const char *)accType, amount);
-            int year, month, day = 1;
+            double interest = calculateInterest(accType, amount);
+            int year = 0, month = 0, day = 1;
+            if (depositDate && sscanf(depositDate, "%d-%d-%d", &year, &month, &day) == 3)
+            {
+                printf("💸 Interest: You will get $%.2lf of interest on day %d of every month.\n", interest, day);
+            }
+        }
+        else if (strcmp(accType, "fixed01") == 0 || strcmp(accType, "fixed02") == 0 || strcmp(accType, "fixed03") == 0)
+        {
+            double interest = calculateInterest(accType, amount);
+            int year = 0, month = 0, day = 0;
+            int duration = 0;
+
+            if (strcmp(accType, "fixed01") == 0)
+                duration = 1;
+            else if (strcmp(accType, "fixed02") == 0)
+                duration = 2;
+            else if (strcmp(accType, "fixed03") == 0)
+                duration = 3;
+
             if (depositDate && sscanf((const char *)depositDate, "%d-%d-%d", &year, &month, &day) == 3)
             {
-                printf(BOLD CYAN "💸 Interest: You’ll receive $%.2lf on day %d every month.\n" RESET, interest, day);
+                int maturityYear = year + duration;
+                printf("💸 Interest: You will get $%.2lf on %02d/%02d/%04d.\n",
+                       interest, day, month, maturityYear);
+            }
+            else
+            {
+                // fallback if depositDate is missing or invalid
+                printf("💸 Interest: You will get $%.2lf at the end of the %d-year period.\n",
+                       interest, duration);
             }
         }
     }
@@ -860,6 +886,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
             break;
         }
         printf(RED "❌ Invalid account number input. Try again.\n" RESET);
+        sleep(1);
         while (getchar() != '\n')
             ;
         if (attempts == 0)
@@ -870,6 +897,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (!checkAccount(db, user, accNbr))
     {
         printf(RED "❌ Account not found under your ownership.\n" RESET);
+        sleep(1);
         return;
     }
 
@@ -877,6 +905,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
     if (!checkAccountType(db, user, accNbr))
     {
         printf(YELLOW "⚠️  Transactions are not allowed for 'fixed' accounts.\n" RESET);
+        sleep(1);
         return;
     }
 
@@ -892,6 +921,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
             break;
         }
         printf(RED "❌ Invalid transaction type. Try again.\n" RESET);
+        sleep(1);
         while (getchar() != '\n')
             ;
         if (attempts == 0)
@@ -910,6 +940,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
             break;
         }
         printf(RED "❌ Invalid amount. Must be greater than 0. Try again.\n" RESET);
+        sleep(1);
         while (getchar() != '\n')
             ;
         if (attempts == 0)
@@ -928,14 +959,12 @@ void makeTransaction(sqlite3 *db, struct User *user)
         return;
     }
 
-    // === Bind values ===
     sqlite3_bind_double(stmt, 1, amount);
     sqlite3_bind_int(stmt, 2, accNbr);
     sqlite3_bind_text(stmt, 3, user->username, -1, SQLITE_STATIC);
     if (choice == 2)
         sqlite3_bind_double(stmt, 4, amount);
 
-    // === Execute and finalize ===
     rc = sqlite3_step(stmt);
     int changes = sqlite3_changes(db);
     sqlite3_finalize(stmt);
@@ -950,6 +979,7 @@ void makeTransaction(sqlite3 *db, struct User *user)
     {
         if (choice == 2)
             printf(RED "❌ Withdrawal failed: Insufficient funds \n" RESET);
+            
         else
             printf(RED "❌ Deposit failed.\n" RESET);
     }
