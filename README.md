@@ -66,9 +66,6 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
   - Ownership
   - New username existence
 
-#### ⚡ Bonus: Real-time Transfer Notification
-> Using **pipes and child processes**, when one user transfers an account, the recipient is **instantly notified** in their terminal if logged in.
-
 ---
 
 ### 🧪 Additional Features 
@@ -76,7 +73,6 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 - 🧰 **Makefile** support for build automation
 - 🗃️ **SQLite Database Integration** (instead of plain text files)
 - 🧼 Proper **input validation**, **error handling**, and **memory management**
-- 🧼 Proper **Pipes and child processes**
 
 ---
 
@@ -88,7 +84,7 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 | **SQLite**  | Database for storing accounts      |
 | **Makefile**| Build automation                   |
 | **ANSI Escape Codes** | Terminal styling & color |
-| **Pipes**   | Bonus real-time inter-process alerts |
+
 
 ---
 

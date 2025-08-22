@@ -2,28 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <sqlite3.h>
 #include "header.h"
 
-void disableEcho(struct termios *oldFlags)
-{
-    struct termios newFlags;
-    tcgetattr(fileno(stdin), oldFlags);
-    newFlags = *oldFlags;
-    newFlags.c_lflag &= ~ECHO;
-    newFlags.c_lflag |= ECHONL;
-    tcsetattr(fileno(stdin), TCSANOW, &newFlags);
-}
-
-void restoreEcho(const struct termios *oldFlags)
-{
-    tcsetattr(fileno(stdin), TCSANOW, oldFlags);
-}
-
 void login(sqlite3 *db, struct User *user)
 {
-    struct termios oldFlags;
     int attempts = 0;
 
     system("clear");
@@ -42,12 +25,10 @@ void login(sqlite3 *db, struct User *user)
         while (getchar() != '\n' && getchar() != EOF)
             ;
 
-        disableEcho(&oldFlags);
         printf("  %sPassword:%s ", CYAN, RESET);
         scanf("%49s", user->password);
         while (getchar() != '\n' && getchar() != EOF)
             ;
-        restoreEcho(&oldFlags);
 
         if (check_credentials(db, user) != 0)
         {
@@ -149,7 +130,7 @@ void register_user(sqlite3 *db, struct User *user)
             continue;
         }
 
-        break; 
+        break;
     }
 
     if (attempts == 3)
@@ -159,8 +140,6 @@ void register_user(sqlite3 *db, struct User *user)
         exit(0);
     }
 
-    struct termios oldFlags;
-    disableEcho(&oldFlags);
 
     attempts = 0;
     while (attempts < 3)
@@ -178,10 +157,9 @@ void register_user(sqlite3 *db, struct User *user)
             continue;
         }
 
-        break; 
+        break;
     }
 
-    restoreEcho(&oldFlags);
 
     if (attempts == 3)
     {
