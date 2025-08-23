@@ -10,7 +10,6 @@ A C-based **ATM Simulation System** designed to manage user accounts with operat
 ### 1. 👤 User Registration
 - Users can **register**  or **login**
 
-
 ---
 
 ### 2. 📝 Update Account Information
