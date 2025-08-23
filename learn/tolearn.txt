@@ -1,8 +1,0 @@
-learn/tolearn.txt
-| Concept   | What to Learn                   | How to Practice                              |
-| --------- | ------------------------------- | -------------------------------------------- |
-| `fork()`  | How processes are created       | Write a program that forks multiple children |
-| `pipe()`  | How parent-child talk           | Pass messages using pipes                    |
-| `pthread` | How threads run concurrently    | Make threads print messages or do work       |
-| `exec()`  | How to run another program      | Use `exec()` to launch `ls`, etc.            |
-| `wait()`  | How to manage process lifecycle | Use `wait()` in the parent                   |
